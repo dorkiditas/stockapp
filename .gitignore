@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+ib_config.json
+*.exe
+streamlit.log
+st_test.log
+.streamlit/secrets.toml
+mkshortcut.py
