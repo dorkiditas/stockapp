@@ -17,6 +17,7 @@ import aimap
 import catalyst
 import sectors
 import ibkr
+import forward
 
 st.set_page_config(page_title="选股工作台", page_icon="📈", layout="wide")
 
@@ -68,6 +69,11 @@ def ai_map():
 @st.cache_data(ttl=900, show_spinner=False)
 def catalysts(rows_tuple):
     return catalyst.classify_many(list(rows_tuple))
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def forward_many(tickers_tuple):
+    return forward.fetch_many(list(tickers_tuple))
 
 
 @st.cache_data(ttl=900, show_spinner=False)
@@ -339,6 +345,56 @@ def page_themes():
                "封测三巨头 长电/通富/华天(盈利、PS仅3.5)。其余源杰/长光华芯等是资金面不是基本面。")
 
 
+def page_forward():
+    st.subheader("🔮 前瞻信号")
+    st.caption("驱动股价的是『接下来会怎样』。这里看四类前瞻(仅美股):"
+               "**明年EPS增速** · **分析师近期上调/下调**(领先信号) · **过去4季超预期** · 下一财季。"
+               "数据:纳斯达克分析师预测。")
+    # 默认:你持仓里的美股 + 几个核心AI票
+    hold_us = []
+    if os.path.exists(HOLDINGS_CSV):
+        h = pd.read_csv(HOLDINGS_CSV, dtype={"ticker": str})
+        hold_us = [t for t in h["ticker"].tolist() if str(t).isalpha()]
+    default = ", ".join(dict.fromkeys(hold_us + ["NVDA", "AVGO", "MU", "CRDO", "QCOM", "PLTR"]))
+    raw = st.text_area("美股代码(默认=你的持仓+核心AI)", default, height=68)
+    tickers = [x.strip().upper() for x in raw.replace("\n", ",").split(",") if x.strip()]
+
+    if st.button("拉取前瞻", type="primary") or tickers:
+        with st.spinner("拉取分析师预测…"):
+            data = forward_many(tuple(tickers))
+        rows = []
+        for t in tickers:
+            r = data.get(t) or {}
+            if not r or r.get("明年EPS增速%") is None:
+                continue
+            rows.append({
+                "代码": t, "前瞻信号": forward.signal(r),
+                "明年EPS增速%": r.get("明年EPS增速%"),
+                "近4周上调": r.get("上调"), "近4周下调": r.get("下调"),
+                "净修正": r.get("净修正"),
+                "近4季超预期": r.get("近4季超预期"), "平均超预期%": r.get("平均超预期%"),
+                "下一财季": r.get("下一财季"),
+            })
+        if not rows:
+            st.warning("没拉到(可能是非美股/小票,纳斯达克无覆盖)。")
+            return
+        df = pd.DataFrame(rows)
+        # 按信号强度+增速排序
+        order = {"🔥 强前瞻": 0, "👍 偏正": 1, "⚪ 一般": 2, "⚠️ 转弱": 3}
+        df["_o"] = df["前瞻信号"].map(order).fillna(2)
+        df = df.sort_values(["_o", "明年EPS增速%"], ascending=[True, False]).drop(columns="_o")
+        st.dataframe(df, use_container_width=True, hide_index=True, height=460,
+                     column_config={
+                         "明年EPS增速%": st.column_config.NumberColumn(format="%d%%",
+                             help="明年共识EPS相对今年的增速"),
+                         "净修正": st.column_config.NumberColumn(
+                             help="近4周上调家数-下调家数,正=分析师在上修(领先信号)"),
+                         "平均超预期%": st.column_config.NumberColumn(format="%.1f%%"),
+                     })
+        st.caption("🔥强前瞻=高增速+被上修+常超预期(三者占多);⚠️转弱=零/负增速或被下修。"
+                   "**净修正为正**是最值得盯的领先信号——分析师在悄悄上调,股价往往跟。")
+
+
 def page_sectors():
     st.subheader("🧭 按赛道选股")
     st.caption("把AI产业链拆成12个细分赛道。选赛道(或全部),再勾选条件,可同时按多个标准筛。")
@@ -454,18 +510,20 @@ def _fmt(df, with_market=False):
 
 # ============================================================================
 st.title("📈 选股工作台")
-tabs = st.tabs(["📊 我的持仓", "🧭 按赛道选股", "💡 AI估值+拥挤", "🔬 AI芯片材料",
-                "🌐 全市场选股", "🔍 查股票"])
+tabs = st.tabs(["📊 我的持仓", "🔮 前瞻信号", "🧭 按赛道选股", "💡 AI估值+拥挤",
+                "🔬 AI芯片材料", "🌐 全市场选股", "🔍 查股票"])
 with tabs[0]:
     page_portfolio()
 with tabs[1]:
-    page_sectors()
+    page_forward()
 with tabs[2]:
-    page_aimap()
+    page_sectors()
 with tabs[3]:
-    page_themes()
+    page_aimap()
 with tabs[4]:
-    page_pick()
+    page_themes()
 with tabs[5]:
+    page_pick()
+with tabs[6]:
     page_lookup()
 st.caption("数据来自公开行情接口，仅供研究，非投资建议。")
