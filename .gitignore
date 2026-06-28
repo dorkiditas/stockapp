@@ -7,3 +7,8 @@ streamlit.log
 st_test.log
 .streamlit/secrets.toml
 mkshortcut.py
+feed/
+.poll_push.sh
+.poll2.sh
+.ghdev.json
+.ghtoken

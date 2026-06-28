@@ -120,6 +120,12 @@ def _one(code, name, note):
     return row
 
 
+def build_many(items):
+    """通用:items=[(代码,备注),...] -> [行dict],并发拉估值+拥挤。供任意主题页复用。"""
+    with ThreadPoolExecutor(max_workers=10) as ex:
+        return list(ex.map(lambda kv: _one(kv[0], "", kv[1]), items))
+
+
 def build():
     """返回 {档位: [行dict,...]}，并发拉取。"""
     jobs = []

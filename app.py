@@ -86,6 +86,31 @@ def all_sector_data():
     return sectors.build_all()
 
 
+# 我的操作判断(基于研报+实时数据+AI产业链规律,2026-06)。数字每天刷新,call是我的判断。
+MY_CALLS = {
+    # 持仓
+    "AVGO": ("🟢 留/逢跌加", "全球仅5家真实LLM客户=护城河;+72%增速、分析师净+11上修(你全仓最强);前瞻PE26可接受"),
+    "CRDO": ("🟡 减一部分", "107倍PE、比DCF高59%,上修只剩+1;光通信是真上行但CRDO已price完美→把钱换CIEN"),
+    "CBRS": ("🟢 留", "Cerebras·AI算力核心线;高波动,维持小仓"),
+    "QCOM": ("🔴 砍/大减", "明年0增长、Neutral,400股占太多资本;唯一指望6/24投资者日(AI200/HUMAIN)→腾出钱买MU"),
+    "GEV":  ("🟢 留(不加)", "AI电力,需求2030+220%顺风;但前瞻PE60开始贵,留着别追"),
+    "PLTR": ("🟡 留小仓", "AI软件,UBS Buy$200但PS59太贵;小仓可留,别加"),
+    "SIEGY": ("⚪ 中性", "西门子·工业,非AI核心;可作压舱不必加"),
+    "EWZ":  ("🔴 清理", "巴西ETF,与你AI edge无关,占资本分散注意力"),
+    "USO":  ("🔴 平空", "油空·宏观噪音,跟你edge无关"),
+    "BE":   ("🔴 平空", "做空AI电力,与你GEV多头自相矛盾,正逆势流血(AI电力2030+220%)"),
+    "DXYZ": ("🟡 减", "SpaceX代理,溢价波动巨大,题材小仓即可"),
+    "NASA": ("🟡 留小仓", "太空ETF,题材配置,别加"),
+}
+# 买入候选(不在持仓,我建议建仓)
+MY_BUYS = {
+    "MU":   ("🟢 买入(头号)", "存储:前瞻PE11+明年96%增速+净+7上修+NAND紧到CY27+被低配,全链最佳风险收益"),
+    "CIEN": ("🟢 买入", "光互连里没人挤的:+57%增速、净+7上修、+40%到目标价、未贴高点;接CRDO的钱"),
+    "000660.KS": ("🟢 买入(可选)", "SK海力士·更便宜的存储,前瞻PE仅6.7,HBM全球龙头"),
+    "SNDK": ("🟡 关注", "闪迪·NAND同逻辑,Citi目标$2500;8月投资者日催化"),
+}
+
+
 def _faction(row):
     """老登/小登 派系(估值主导,不看动量):
     🧓老登=便宜成熟盈利(前瞻PE≤20);🐤小登=贵/亏损/高成长(前瞻PE≥45或亏损或无盈利且高PS)。"""
@@ -345,6 +370,108 @@ def page_themes():
                "封测三巨头 长电/通富/华天(盈利、PS仅3.5)。其余源杰/长光华芯等是资金面不是基本面。")
 
 
+def page_actions():
+    st.subheader("🎯 我的操作建议")
+    st.caption("我的判断(基于研报+实时数据+AI产业链规律)+ 每天最新信号。"
+               "核心打法:从挤爆的算力核心,换到便宜+预期上修+被低配的AI邻接(存储/CIEN)。")
+    st_autorefresh(interval=120000, key="act_auto")
+
+    # 收集持仓代码 + 候选
+    hold = []
+    if os.path.exists(HOLDINGS_CSV):
+        hold = pd.read_csv(HOLDINGS_CSV, dtype={"ticker": str})["ticker"].tolist()
+    buys = list(MY_BUYS.keys())
+    allc = list(dict.fromkeys(hold + buys))
+    with st.spinner("拉取最新价+前瞻信号…"):
+        q = quote(tuple(allc))
+        us = [c for c in allc if str(c).isalpha()]
+        fwd = forward_many(tuple(us)) if us else {}
+    qmap = {r["code"]: r for _, r in q.iterrows()}
+
+    def build(code, action, reason):
+        r = qmap.get(tencent.to_symbol(code), {})
+        f = fwd.get(str(code).upper(), {}) if str(code).isalpha() else {}
+        return {"操作": action, "标的": r.get("name") or code, "代码": code,
+                "现价": r.get("price"), "今日%": r.get("chg_pct"),
+                "明年EPS增速%": f.get("明年EPS增速%"), "净修正": f.get("净修正"),
+                "理由": reason}
+
+    st.markdown("#### 📌 持仓 — 加 / 留 / 减 / 砍 / 平")
+    rows = [build(c, *MY_CALLS.get(str(c).upper(), ("⚪ —", "未覆盖")))
+            for c in hold]
+    # 操作排序:加/留在前,砍/平在后看着顺
+    rank = {"🟢": 0, "⚪": 1, "🟡": 2, "🔴": 3}
+    rows.sort(key=lambda x: rank.get(x["操作"][:1], 5))
+    _action_table(rows)
+
+    st.markdown("#### 🟢 买入候选(不在你持仓,我建议建仓)")
+    brows = [build(c, *MY_BUYS[c]) for c in buys]
+    _action_table(brows)
+
+    st.info("**最该立刻做的两件:① 建 MU 仓(存储,全链最佳风险收益) ② 平掉 BE 空单(在逆势流血)。** "
+            "其次:CRDO减一部分换CIEN、QCOM大减腾钱。")
+    st.caption("⚠️ 这是我的判断,不是保证。存储是周期股,赌AI拉长周期到2027不见顶——逻辑有数据支撑,"
+               "但超大厂capex急刹车则回撤快,故『加仓』非all-in。前瞻数据(增速/上修)仅美股有。")
+
+
+def _action_table(rows):
+    df = pd.DataFrame(rows)[["操作", "标的", "代码", "现价", "今日%",
+                             "明年EPS增速%", "净修正", "理由"]]
+    st.dataframe(df, use_container_width=True, hide_index=True,
+                 column_config={
+                     "今日%": st.column_config.NumberColumn(format="%.1f%%"),
+                     "明年EPS增速%": st.column_config.NumberColumn(format="%d%%"),
+                     "净修正": st.column_config.NumberColumn(help="分析师近4周净上调EPS家数,正=在上修"),
+                     "理由": st.column_config.TextColumn(width="large"),
+                 })
+
+
+def page_research():
+    st.subheader("📰 研报情报")
+    st.caption("从你 持仓 文件夹里的卖方研报(GS/UBS/MS/Citi)提取的目标价+核心逻辑+前瞻变化。"
+               "这是免费API给不了的——卖方的『为什么』和最新预期调整。")
+    path = os.path.join(BASE_DIR, "research_intel.json")
+    if not os.path.exists(path):
+        st.info("还没有研报情报。把研报PDF放进 持仓 文件夹,让我重新提取。")
+        return
+    import json
+    items = json.load(open(path, encoding="utf-8"))
+
+    def age_days(d):
+        try:
+            return (dt.date.today() - dt.date.fromisoformat(d)).days
+        except Exception:
+            return 9999
+
+    fresh_only = st.checkbox("只看近3个月(过滤过时研报)", value=True)
+    groups = {"持仓": "📌 与你持仓相关", "AI核心": "🤖 AI核心", "主题": "🌐 主题/行业"}
+    for key, title in groups.items():
+        sub = [x for x in items if x.get("relevance") == key]
+        sub.sort(key=lambda x: x.get("date", ""), reverse=True)  # 新的在前
+        if fresh_only:
+            sub = [x for x in sub if age_days(x.get("date", "")) <= 95]
+        if not sub:
+            continue
+        st.markdown(f"#### {title}")
+        rows = []
+        for x in sub:
+            a = age_days(x.get("date", ""))
+            rows.append({
+                "时效": "✅" if a <= 95 else "⏳过时", "标的": " ".join(x.get("tickers", [])) or "—",
+                "券商": x.get("source", ""), "日期": x.get("date", ""),
+                "评级": x.get("rating", ""), "目标价": x.get("target", ""),
+                "核心逻辑": " · ".join(x.get("thesis", [])),
+                "前瞻/预期变化": x.get("forward", ""),
+            })
+        st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True,
+                     column_config={
+                         "核心逻辑": st.column_config.TextColumn(width="large"),
+                         "前瞻/预期变化": st.column_config.TextColumn(width="medium"),
+                     })
+    st.caption("⚠️ 中文研报(GPU/ASIC、国产算力、存储动态、长飞光纤等约24份)是扫描图片版,"
+               "需OCR才能提取——还没做。要的话告诉我,我加OCR。")
+
+
 def page_forward():
     st.subheader("🔮 前瞻信号")
     st.caption("驱动股价的是『接下来会怎样』。这里看四类前瞻(仅美股):"
@@ -403,14 +530,15 @@ def page_sectors():
               for n in names}
     pick = st.selectbox("选赛道", names, format_func=lambda n: labels[n])
 
-    # 多条件勾选(同时满足 = AND)
+    # 多条件勾选(同时满足 = AND)。研报学到的赢家规律:卡位+预期上修+不拥挤
     st.markdown("**同时满足这些条件(可多选):**")
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3, c4, c5 = st.columns(5)
     f_cheap = c1.checkbox("💰 便宜", help="前瞻PE(无则PE)在0~30之间,即盈利且不贵")
     f_uncrowded = c2.checkbox("🧊 不拥挤", help="股价未超卖方目标(隐含涨幅≥0)且52周位置≤85%")
-    f_cat = c3.checkbox("🚀 有正向催化", help="近14天新闻判为🟢")
-    f_fac = c4.selectbox("派系", ["全部", "🧓老登", "🐤小登", "—中间"],
-                         help="🧓老登=便宜成熟盈利的传统价值;🐤小登=贵/亏损/贴高点的高成长题材")
+    f_cat = c3.checkbox("🚀 有催化", help="近14天新闻判为🟢")
+    f_rev = c4.checkbox("📈 预期上修", help="分析师近4周净上调EPS预期(赢家共同信号,仅美股有数据)")
+    f_fac = c5.selectbox("派系", ["全部", "🧓老登", "🐤小登", "—中间"],
+                         help="🧓老登=便宜成熟盈利;🐤小登=贵/亏损/高成长")
 
     is_all = pick.startswith("🌍")
     if is_all:
@@ -434,9 +562,21 @@ def page_sectors():
             with st.spinner(f"对 {len(sub)} 只候选扫近期新闻催化…"):
                 sectors.add_catalyst(sub)
         sub = [r for r in sub if str(r.get("近期催化", "")).startswith("🟢")]
+    # 预期上修(分析师近4周净上调EPS):赢家共同信号,仅美股有数据,按需拉取
+    if f_rev:
+        us = [r["代码"] for r in sub if str(r["代码"]).isalpha()]
+        fwd = forward_many(tuple(us)) if us else {}
+        kept = []
+        for r in sub:
+            net = (fwd.get(r["代码"]) or {}).get("净修正")
+            if net is not None and net >= 1:
+                r["净修正"] = net
+                kept.append(r)
+        sub = kept
     filt = sub
 
-    active = [n for n, on in [("便宜", f_cheap), ("不拥挤", f_uncrowded), ("有催化", f_cat)] if on]
+    active = [n for n, on in [("便宜", f_cheap), ("不拥挤", f_uncrowded),
+                              ("有催化", f_cat), ("预期上修", f_rev)] if on]
     if f_fac != "全部":
         active.append(f_fac)
     any_filter = bool(active)
@@ -445,22 +585,77 @@ def page_sectors():
     else:
         st.caption(f"共 {len(rows)} 只。勾上面的条件可组合筛选。")
 
+    show_data = filt if any_filter else rows
     base_cols = (["赛道"] if is_all else []) + ["名称", "代码", "派系", "现价", "PE", "前瞻PE",
-                 "PS", "隐含涨幅%", "52周位置%", "近期催化", "催化头条"]
+                 "PS", "隐含涨幅%", "52周位置%"]
+    if f_rev and any("净修正" in r for r in show_data):
+        base_cols.append("净修正")
+    base_cols += ["近期催化", "催化头条"]
     if not is_all:
         base_cols.append("判定理由")
-    df = pd.DataFrame(filt if any_filter else rows)[base_cols]
+    base_cols = [c for c in base_cols if any(c in r for r in show_data)] if show_data else base_cols
+    df = pd.DataFrame(show_data)[[c for c in base_cols if c in pd.DataFrame(show_data).columns]] \
+        if show_data else pd.DataFrame()
     st.dataframe(df, use_container_width=True, hide_index=True, height=520,
                  column_config={
                      "隐含涨幅%": st.column_config.NumberColumn("目标隐含涨幅%", format="%d%%",
                          help="卖方目标价vs现价,负数=已涨过目标"),
                      "52周位置%": st.column_config.NumberColumn(format="%d%%", help="52周区间位置"),
+                     "净修正": st.column_config.NumberColumn(help="分析师近4周净上调EPS家数,越大越强"),
                      "催化头条": st.column_config.TextColumn(width="medium"),
                      "判定理由": st.column_config.TextColumn("赛道内备注", width="medium"),
                  })
-    st.caption("⚠️ 拥挤度(隐含涨幅/52周位置)只有美/台/日/韩/欧股有,A股缺这两项——勾「不拥挤」会过滤掉A股。"
-               "「🌍全部赛道」为提速默认不带催化,勾「有催化」才对候选实时扫新闻。"
-               "派系:🧓老登=便宜成熟盈利的传统价值;🐤小登=贵/亏损/贴52周高点的高成长题材。")
+    st.caption("🎯 研报学到的赢家规律=**价值链卡位 + 预期上修 + 不拥挤**(再加便宜/催化更稳)。"
+               "⚠️拥挤度/预期上修只有美(及部分台日韩欧)股有,A股缺——勾这两项会过滤掉A股。"
+               "「🌍全部赛道」默认不带催化/预期上修,勾了才对候选实时拉取。")
+
+
+# 太空经济主题(你持仓 NASA/DXYZ 所在赛道)。研报底子:MS《Space 60》,FY27国防预算$1.5万亿、太空军+77%
+SPACE_THEMES = {
+    "🛰️ 卫星/太空互联网": {
+        "ASTS": "AST SpaceMobile·手机直连卫星,弹性最大", "IRDM": "铱星·成熟卫星通信现金流",
+        "GSAT": "Globalstar·绑苹果卫星", "VSAT": "Viasat·卫星宽带"},
+    "🚀 火箭发射/新太空": {
+        "RKLB": "Rocket Lab·小火箭+Neutron,发射龙头", "LUNR": "Intuitive Machines·登月/月球经济",
+        "RDW": "Redwire·太空基础设施", "PL": "Planet Labs·对地观测数据", "BKSY": "BlackSky·实时地理情报"},
+    "🛡️ 国防航天主承包": {
+        "LMT": "洛克希德·导弹/航天主承包", "NOC": "诺斯罗普·B21/太空", "RTX": "雷神·导弹防御",
+        "BA": "波音·航天/防务", "LHX": "L3Harris·太空载荷", "GD": "通用动力"},
+    "⛏️ 关键材料/上游": {
+        "MP": "MP Materials·稀土(国防/太空磁材),美国独苗"},
+    "📦 太空ETF/代理(含你持仓)": {
+        "NASA": "★你的持仓·Tema太空创新ETF", "DXYZ": "★你的持仓·Destiny,持SpaceX代理",
+        "ARKX": "ARK太空探索ETF", "UFO": "Procure太空ETF"},
+}
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def space_data():
+    out = {}
+    for grp, mp in SPACE_THEMES.items():
+        out[grp] = aimap.build_many(list(mp.items()))
+    return out
+
+
+def page_space():
+    st.subheader("🚀 太空经济")
+    st.caption("你持仓 NASA(Tema太空ETF)、DXYZ(SpaceX代理)所在的主题。按子赛道铺全球标的+实时估值。"
+               "底子:MS《Space 60》——FY27国防预算$1.5万亿、太空军预算+77%至$71B,主题热度十年最高。")
+    with st.spinner("拉取太空板块行情+估值…"):
+        data = space_data()
+    for grp, rows in data.items():
+        st.markdown(f"#### {grp}")
+        df = pd.DataFrame(rows)[["名称", "代码", "现价", "PE", "前瞻PE", "PS",
+                                 "隐含涨幅%", "52周位置%", "判定理由"]]
+        st.dataframe(df, use_container_width=True, hide_index=True,
+                     column_config={
+                         "隐含涨幅%": st.column_config.NumberColumn("目标隐含涨幅%", format="%d%%",
+                             help="卖方目标价vs现价"),
+                         "52周位置%": st.column_config.NumberColumn(format="%d%%"),
+                         "判定理由": st.column_config.TextColumn("看点", width="large"),
+                     })
+    st.caption("💡 我的判断:太空多数是题材/亏损(ASTS/LUNR/RKLB弹性大但贵),国防主承包(LMT/NOC/RTX)"
+               "是有现金流的稳健底仓;MP(稀土)是国防自主的卡位。你的NASA/DXYZ是一篮子题材,波动大,小仓配置即可。")
 
 
 def page_aimap():
@@ -510,20 +705,26 @@ def _fmt(df, with_market=False):
 
 # ============================================================================
 st.title("📈 选股工作台")
-tabs = st.tabs(["📊 我的持仓", "🔮 前瞻信号", "🧭 按赛道选股", "💡 AI估值+拥挤",
-                "🔬 AI芯片材料", "🌐 全市场选股", "🔍 查股票"])
+tabs = st.tabs(["📊 我的持仓", "🎯 操作建议", "📰 研报情报", "🔮 前瞻信号", "🧭 按赛道选股",
+                "💡 AI估值+拥挤", "🔬 AI芯片材料", "🚀 太空经济", "🌐 全市场选股", "🔍 查股票"])
 with tabs[0]:
     page_portfolio()
 with tabs[1]:
-    page_forward()
+    page_actions()
 with tabs[2]:
-    page_sectors()
+    page_research()
 with tabs[3]:
-    page_aimap()
+    page_forward()
 with tabs[4]:
-    page_themes()
+    page_sectors()
 with tabs[5]:
-    page_pick()
+    page_aimap()
 with tabs[6]:
+    page_themes()
+with tabs[7]:
+    page_space()
+with tabs[8]:
+    page_pick()
+with tabs[9]:
     page_lookup()
 st.caption("数据来自公开行情接口，仅供研究，非投资建议。")
