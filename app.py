@@ -101,6 +101,13 @@ MY_CALLS = {
     "BE":   ("🔴 平空", "做空AI电力,与你GEV多头自相矛盾,正逆势流血(AI电力2030+220%)"),
     "DXYZ": ("🟡 减", "SpaceX代理,溢价波动巨大,题材小仓即可"),
     "NASA": ("🟡 留小仓", "太空ETF,题材配置,别加"),
+    # A股持仓(也几乎全是AI产业链)
+    "600703": ("🟢 留(已+41%)", "三安光电·化合物半导体平台,InP光芯片已量产;仍亏损/估值高,别加,可分批止盈"),
+    "600522": ("🟢 留", "中天科技·AI光纤需求顺风(长飞同逻辑)+海缆/电网;估值相对不贵"),
+    "002475": ("🟢 留", "立讯精密·苹果链转AI服务器连接/电源/光模块,卡位好,估值合理"),
+    "600584": ("🟢 留/可加", "长电科技·封测龙头,AI先进封装(CoWoS国产链);AI芯片材料里估值最讲得通的一簇(盈利PS3.5)"),
+    "002428": ("🟡 减/谨慎", "云南锗业·纯正InP/锗稀缺,但PE天价、估值脱离基本面,题材属性强;反弹减"),
+    "000725": ("⚪ 周期配置", "京东方A·面板周期股,与AI主线关系弱;面板涨价周期可博,非focus核心"),
 }
 # 买入候选(不在持仓,我建议建仓)
 MY_BUYS = {
@@ -260,13 +267,17 @@ def page_portfolio():
     m["盈亏"] = None
     m.loc[has_cost, "盈亏"] = ((m["price"] - m["cost"]) * m["shares"]).round(0)
 
-    total_mv = m["市值"].sum()
-    today_pl = m["今日盈亏"].sum()
-    c1, c2, c3 = st.columns(3)
-    c1.metric("总市值", f"${total_mv:,.0f}")
-    c2.metric("今日盈亏", f"${today_pl:,.0f}",
-              f"{today_pl/(total_mv-today_pl)*100:+.2f}%" if total_mv else None)
-    c3.metric("持仓数", f"{(m['shares'] != 0).sum()} 只")
+    m["盈亏%"] = ((m["price"] / m["cost"] - 1) * 100).round(1)
+    # 按币种分开统计(美元/人民币不能混加)
+    cur = {"美股": "$", "A股": "¥", "港股": "HK$"}
+    groups = [g for g in ["美股", "A股", "港股"] if (m["market"] == g).any()]
+    cols = st.columns(len(groups) + 1)
+    for i, g in enumerate(groups):
+        sub = m[m["market"] == g]
+        sym = cur.get(g, "")
+        mv, pl = sub["市值"].sum(), sub["今日盈亏"].sum()
+        cols[i].metric(f"{g}市值", f"{sym}{mv:,.0f}", f"今日 {sym}{pl:,.0f}")
+    cols[-1].metric("持仓数", f"{(m['shares'] != 0).sum()} 只")
 
     tcol, bcol = st.columns([4, 1])
     tcol.caption(f"🟢 自动刷新中 · 上次更新 {dt.datetime.now().strftime('%H:%M:%S')}（每60秒自动拉新价）")
@@ -277,12 +288,13 @@ def page_portfolio():
     # 展示表：红涨绿跌用箭头标注
     view = m.copy()
     view["方向"] = view["shares"].apply(lambda s: "🔻空" if s < 0 else "持有")
-    show = view[["name", "market", "shares", "price", "chg_pct", "市值", "今日盈亏"]].rename(
+    show = view[["name", "market", "shares", "price", "chg_pct", "市值", "今日盈亏", "盈亏", "盈亏%"]].rename(
         columns={"name": "名称", "market": "市场", "shares": "股数",
                  "price": "现价", "chg_pct": "今日%"})
-    show = show.sort_values("今日盈亏", ascending=False)
-    st.dataframe(show, use_container_width=True, height=480,
-                 column_config={"今日%": st.column_config.NumberColumn(format="%.2f%%")})
+    show = show.sort_values("市值", ascending=False)
+    st.dataframe(show, use_container_width=True, height=520,
+                 column_config={"今日%": st.column_config.NumberColumn(format="%.2f%%"),
+                                "盈亏%": st.column_config.NumberColumn(format="%.1f%%")})
     st.caption("💡 想看买入以来的总盈亏？在 stockapp/holdings.csv 的 cost 列填上成本价即可。"
                " USO 暂无数据源（油气ETF），显示为空。")
 
