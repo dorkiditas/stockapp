@@ -120,6 +120,13 @@ def _one(code, name, note):
     return row
 
 
+def us_val_many(symbols):
+    """批量拉美股 forward PE(给全球选股的价值筛选补估值)。返回 {sym: {pe,fpe,ps}}。"""
+    with ThreadPoolExecutor(max_workers=12) as ex:
+        res = list(ex.map(lambda s: (s, _us_valuation(s)), symbols))
+    return dict(res)
+
+
 def build_many(items):
     """通用:items=[(代码,备注),...] -> [行dict],并发拉估值+拥挤。供任意主题页复用。"""
     with ThreadPoolExecutor(max_workers=10) as ex:

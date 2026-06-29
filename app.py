@@ -86,39 +86,7 @@ def all_sector_data():
     return sectors.build_all()
 
 
-# 我的操作判断(基于研报+实时数据+AI产业链规律,2026-06)。数字每天刷新,call是我的判断。
-MY_CALLS = {
-    # 持仓
-    "AVGO": ("🟢 留/逢跌加", "全球仅5家真实LLM客户=护城河;+72%增速、分析师净+11上修(你全仓最强);前瞻PE26可接受"),
-    "CRDO": ("🟡 减一部分", "107倍PE、比DCF高59%,上修只剩+1;光通信是真上行但CRDO已price完美→把钱换CIEN"),
-    "CBRS": ("🟢 留", "Cerebras·AI算力核心线;高波动,维持小仓"),
-    "QCOM": ("🔴 砍/大减", "明年0增长、Neutral,400股占太多资本;唯一指望6/24投资者日(AI200/HUMAIN)→腾出钱买MU"),
-    "GEV":  ("🟢 留(不加)", "AI电力,需求2030+220%顺风;但前瞻PE60开始贵,留着别追"),
-    "PLTR": ("🟡 留小仓", "AI软件,UBS Buy$200但PS59太贵;小仓可留,别加"),
-    "SIEGY": ("⚪ 中性", "西门子·工业,非AI核心;可作压舱不必加"),
-    "EWZ":  ("🔴 清理", "巴西ETF,与你AI edge无关,占资本分散注意力"),
-    "USO":  ("🔴 平空", "油空·宏观噪音,跟你edge无关"),
-    "BE":   ("🔴 平空", "做空AI电力,与你GEV多头自相矛盾,正逆势流血(AI电力2030+220%)"),
-    "DXYZ": ("🟡 减", "SpaceX代理,溢价波动巨大,题材小仓即可"),
-    "NASA": ("🟡 留小仓", "太空ETF,题材配置,别加"),
-    # A股持仓(也几乎全是AI产业链)
-    "600703": ("🟢 留(已+41%)", "三安光电·化合物半导体平台,InP光芯片已量产;仍亏损/估值高,别加,可分批止盈"),
-    "600522": ("🟢 留", "中天科技·AI光纤需求顺风(长飞同逻辑)+海缆/电网;估值相对不贵"),
-    "002475": ("🟢 留", "立讯精密·苹果链转AI服务器连接/电源/光模块,卡位好,估值合理"),
-    "600584": ("🟢 留/可加", "长电科技·封测龙头,AI先进封装(CoWoS国产链);AI芯片材料里估值最讲得通的一簇(盈利PS3.5)"),
-    "002428": ("🟡 减/谨慎", "云南锗业·纯正InP/锗稀缺,但PE天价、估值脱离基本面,题材属性强;反弹减"),
-    "000725": ("⚪ 周期配置", "京东方A·面板周期股,与AI主线关系弱;面板涨价周期可博,非focus核心"),
-}
-# 买入候选(不在持仓,我建议建仓)
-MY_BUYS = {
-    "MU":   ("🟢 买入(头号)", "🇺🇸存储:前瞻PE11+明年96%增速+净+7上修+NAND紧到CY27+被低配,全链最佳风险收益"),
-    "TSM":  ("🟢 买入", "🇹🇼台积电ADR·全AI链最佳质价比,前瞻PE~20、代工垄断、+41%目标空间;你IBKR直接买ADR最省事"),
-    "CIEN": ("🟢 买入", "🇺🇸光互连里没人挤的:+57%增速、净+7上修、+40%到目标价、未贴高点;接CRDO的钱"),
-    "000660.KS": ("🟢 买入", "🇰🇷SK海力士·HBM全球龙头,前瞻PE仅~7;存储缺口首选"),
-    "005930.KS": ("🟢 买入", "🇰🇷三星·前瞻PE~6、外资持股2015来最低(被低配),内存+代工+玻璃基板"),
-    "2345.TW": ("🟡 关注", "🇹🇼智邦Accton·白盒交换,后端交换+100%YoY,低调网络赢家"),
-    "SNDK": ("🟡 关注", "🇺🇸闪迪·NAND同逻辑,Citi目标$2500;8月投资者日催化"),
-}
+from calls import MY_CALLS, MY_BUYS  # 我的操作判断(app与微信推送共用)
 
 
 def _faction(row):
@@ -306,37 +274,64 @@ def page_portfolio():
 # 页面 2：选股（全 A股，点预设即可）
 # ============================================================================
 def page_pick():
-    st.subheader("🌐 选股 · 全 A股扫描")
-    st.write("点一个下面的思路，自动从全部 5500 只 A股里挑：")
-    preset = st.radio("选股思路", [
-        "💎 便宜的好公司（低PE低PB大市值）",
-        "📉 破净股（股价低于净资产）",
-        "🚀 今日强势（涨幅靠前）",
-        "🐂 低估值小盘（市值50-200亿）",
-    ], index=0)
+    st.subheader("🌐 全球选股")
+    mkt = st.radio("市场", ["🇨🇳 A股全市场(5500+)", "🇺🇸 美股全市场(7000+)"], horizontal=True)
 
-    if st.button("开始选股", type="primary"):
-        with st.spinner("扫描全市场（首次约15秒）…"):
-            df = a_universe()
-        if df.empty:
-            st.error("数据拉取失败，稍后再试。")
-            return
-        f = df[df["pe"].notna()].copy()
-        if preset.startswith("💎"):
-            f = f[(f["pe"] > 0) & (f["pe"] <= 15) & (f["pb"] <= 2) & (f["mktcap_yi"] >= 500)]
-            f = f.sort_values("mktcap_yi", ascending=False)
-        elif preset.startswith("📉"):
-            f = f[(f["pb"] > 0) & (f["pb"] < 1)].sort_values("pb")
-        elif preset.startswith("🚀"):
-            f = f.sort_values("chg_pct", ascending=False)
-        else:
-            f = f[(f["mktcap_yi"] >= 50) & (f["mktcap_yi"] <= 200) & (f["pe"] > 0)
-                  & (f["pe"] <= 30)].sort_values("pe")
-        st.success(f"挑出 {len(f)} 只，按思路排好序（显示前 50）：")
-        st.dataframe(_fmt(f.head(50)), use_container_width=True, height=480)
-        st.download_button("⬇️ 导出名单 Excel(CSV)",
-                           f.to_csv(index=False).encode("utf-8-sig"),
-                           "选股结果.csv", "text/csv")
+    if mkt.startswith("🇨🇳"):
+        st.write("从全部 5500+ A股里按思路挑(带PE/PB/市值):")
+        preset = st.radio("选股思路", [
+            "💎 便宜的好公司(低PE低PB大市值)", "📉 破净股(股价低于净资产)",
+            "🚀 今日强势(涨幅靠前)", "🐂 低估值小盘(市值50-200亿)"], index=0)
+        if st.button("开始选股", type="primary"):
+            with st.spinner("扫描全 A股(首次约15秒)…"):
+                df = a_universe()
+            if df.empty:
+                st.error("数据拉取失败,稍后再试。")
+                return
+            f = df[df["pe"].notna()].copy()
+            if preset.startswith("💎"):
+                f = f[(f["pe"] > 0) & (f["pe"] <= 15) & (f["pb"] <= 2) & (f["mktcap_yi"] >= 500)].sort_values("mktcap_yi", ascending=False)
+            elif preset.startswith("📉"):
+                f = f[(f["pb"] > 0) & (f["pb"] < 1)].sort_values("pb")
+            elif preset.startswith("🚀"):
+                f = f.sort_values("chg_pct", ascending=False)
+            else:
+                f = f[(f["mktcap_yi"] >= 50) & (f["mktcap_yi"] <= 200) & (f["pe"] > 0) & (f["pe"] <= 30)].sort_values("pe")
+            st.success(f"挑出 {len(f)} 只(显示前50):")
+            st.dataframe(_fmt(f.head(50)), use_container_width=True, height=480)
+            st.download_button("⬇️ 导出CSV", f.to_csv(index=False).encode("utf-8-sig"), "选股_A股.csv", "text/csv")
+    else:
+        st.write("从全部 7000+ 美股(含NYSE/Nasdaq/AMEX)里挑。"
+                 "美股批量源只有市值+涨跌;『便宜大盘』会对头部自动补前瞻PE。")
+        preset = st.radio("选股思路", [
+            "🚀 今日强势(涨幅靠前)", "🏰 大盘龙头(市值>$100B)",
+            "🐂 中盘活跃($5-50B且今日强)", "💎 便宜大盘(补前瞻PE,挑低估)"], index=0)
+        if st.button("开始选股", type="primary"):
+            with st.spinner("扫描全美股…"):
+                df = u_universe()
+            if df.empty:
+                st.error("数据拉取失败。")
+                return
+            f = df.copy()
+            if preset.startswith("🚀"):
+                f = f[f["mktcap_b"] >= 2].sort_values("chg_pct", ascending=False)
+            elif preset.startswith("🏰"):
+                f = f[f["mktcap_b"] >= 100].sort_values("mktcap_b", ascending=False)
+            elif preset.startswith("🐂"):
+                f = f[(f["mktcap_b"] >= 5) & (f["mktcap_b"] <= 50)].sort_values("chg_pct", ascending=False)
+            else:  # 便宜大盘:取市值前80,补前瞻PE,挑0<fPE<=25
+                top = f[f["mktcap_b"] >= 20].sort_values("mktcap_b", ascending=False).head(80)
+                with st.spinner("给头部80只补前瞻PE…"):
+                    vals = aimap.us_val_many(top["symbol"].tolist())
+                top["前瞻PE"] = top["symbol"].map(lambda s: (vals.get(s) or {}).get("fpe"))
+                f = top[top["前瞻PE"].notna() & (top["前瞻PE"] > 0) & (top["前瞻PE"] <= 25)].sort_values("前瞻PE")
+            cols = ["symbol", "name", "price", "chg_pct", "mktcap_b"] + (["前瞻PE"] if "前瞻PE" in f else [])
+            show = f.head(50)[cols].rename(columns={"symbol": "代码", "name": "名称", "price": "现价",
+                                                    "chg_pct": "今日%", "mktcap_b": "市值(十亿$)"})
+            st.success(f"挑出 {len(f)} 只(显示前50):")
+            st.dataframe(show, use_container_width=True, height=480,
+                         column_config={"今日%": st.column_config.NumberColumn(format="%.1f%%")})
+            st.download_button("⬇️ 导出CSV", f.to_csv(index=False).encode("utf-8-sig"), "选股_美股.csv", "text/csv")
 
 
 # ============================================================================
@@ -721,7 +716,7 @@ def _fmt(df, with_market=False):
 # ============================================================================
 st.title("📈 选股工作台")
 tabs = st.tabs(["📊 我的持仓", "🎯 操作建议", "📰 研报情报", "🔮 前瞻信号", "🧭 按赛道选股",
-                "💡 AI估值+拥挤", "🔬 AI芯片材料", "🚀 太空经济", "🌐 全市场选股", "🔍 查股票"])
+                "💡 AI估值+拥挤", "🔬 AI芯片材料", "🚀 太空经济", "🌐 全球选股", "🔍 查股票"])
 with tabs[0]:
     page_portfolio()
 with tabs[1]:
