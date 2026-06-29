@@ -18,6 +18,7 @@ import catalyst
 import sectors
 import ibkr
 import forward
+import yahoo
 
 st.set_page_config(page_title="选股工作台", page_icon="📈", layout="wide")
 
@@ -59,6 +60,16 @@ def quote(codes_tuple):
 @st.cache_data(ttl=600, show_spinner=False)
 def a_universe():
     return market.a_share_universe()
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def u_universe():
+    return market.us_universe()
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def global_screen(region, size=200):
+    return yahoo.global_screen(region, size)
 
 
 @st.cache_data(ttl=1800, show_spinner=False)
@@ -275,7 +286,8 @@ def page_portfolio():
 # ============================================================================
 def page_pick():
     st.subheader("🌐 全球选股")
-    mkt = st.radio("市场", ["🇨🇳 A股全市场(5500+)", "🇺🇸 美股全市场(7000+)"], horizontal=True)
+    mkt = st.selectbox("市场", ["🇨🇳 A股全市场(5500+)", "🇺🇸 美股全市场(7000+)",
+                              "🇯🇵 日本", "🇰🇷 韩国", "🇹🇼 台湾", "🇭🇰 香港", "🇮🇳 印度"])
 
     if mkt.startswith("🇨🇳"):
         st.write("从全部 5500+ A股里按思路挑(带PE/PB/市值):")
@@ -300,7 +312,7 @@ def page_pick():
             st.success(f"挑出 {len(f)} 只(显示前50):")
             st.dataframe(_fmt(f.head(50)), use_container_width=True, height=480)
             st.download_button("⬇️ 导出CSV", f.to_csv(index=False).encode("utf-8-sig"), "选股_A股.csv", "text/csv")
-    else:
+    elif mkt.startswith("🇺🇸"):
         st.write("从全部 7000+ 美股(含NYSE/Nasdaq/AMEX)里挑。"
                  "美股批量源只有市值+涨跌;『便宜大盘』会对头部自动补前瞻PE。")
         preset = st.radio("选股思路", [
@@ -332,6 +344,29 @@ def page_pick():
             st.dataframe(show, use_container_width=True, height=480,
                          column_config={"今日%": st.column_config.NumberColumn(format="%.1f%%")})
             st.download_button("⬇️ 导出CSV", f.to_csv(index=False).encode("utf-8-sig"), "选股_美股.csv", "text/csv")
+    else:
+        region = {"🇯🇵 日本": "jp", "🇰🇷 韩国": "kr", "🇹🇼 台湾": "tw",
+                  "🇭🇰 香港": "hk", "🇮🇳 印度": "in"}[mkt]
+        st.write("从该市场按市值取前200只(带PE/前瞻PE),再按思路筛。数据走Yahoo,云端最稳。")
+        preset = st.radio("选股思路", [
+            "🏰 市值龙头", "💎 低估值(前瞻PE≤20)", "🚀 今日强势"], index=0)
+        if st.button("开始选股", type="primary"):
+            with st.spinner("拉取该市场行情(Yahoo)…"):
+                df = global_screen(region, 200)
+            if df.empty:
+                st.warning("没拉到(本机VPN下Yahoo常失败;云端正常)。稍后或在手机云端版再试。")
+                return
+            f = df.copy()
+            if preset.startswith("💎"):
+                f = f[f["前瞻PE"].notna() & (f["前瞻PE"] > 0) & (f["前瞻PE"] <= 20)].sort_values("前瞻PE")
+            elif preset.startswith("🚀"):
+                f = f.sort_values("今日%", ascending=False)
+            else:
+                f = f.sort_values("市值(亿)", ascending=False)
+            st.success(f"挑出 {len(f)} 只(显示前50):")
+            st.dataframe(f.head(50), use_container_width=True, height=480,
+                         column_config={"今日%": st.column_config.NumberColumn(format="%.1f%%")})
+            st.download_button("⬇️ 导出CSV", f.to_csv(index=False).encode("utf-8-sig"), "选股_海外.csv", "text/csv")
 
 
 # ============================================================================

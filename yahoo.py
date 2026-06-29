@@ -16,14 +16,57 @@ def _ensure_crumb():
     global _CRUMB
     if _CRUMB:
         return _CRUMB
+    # fc.yahoo.com 已失效,多源兜底取 cookie(云端美国IP可成功)
+    for seed in ("https://fc.yahoo.com", "https://finance.yahoo.com/quote/AAPL",
+                 "https://finance.yahoo.com"):
+        try:
+            _S.get(seed, timeout=12)
+        except Exception:
+            pass
     try:
-        _S.get("https://fc.yahoo.com", timeout=12)
         c = _S.get("https://query1.finance.yahoo.com/v1/test/getcrumb", timeout=12).text
-        if c and "<" not in c:
+        if c and "<" not in c and "{" not in c:
             _CRUMB = c
     except Exception:
         _CRUMB = None
     return _CRUMB
+
+
+# region 代码:us 美 / jp 日 / kr 韩 / tw 台 / hk 港 / in 印 / gb 英 / de 德 / fr 法
+def global_screen(region, size=100):
+    """Yahoo 筛选器:按市场拉市值前 N 只(带 PE/前瞻PE/市值)。返回 DataFrame。
+    云端可用;本机VPN下crumb常失败会返回空。"""
+    import pandas as pd
+    crumb = _ensure_crumb()
+    if not crumb:
+        return pd.DataFrame()
+    rows = []
+    for off in range(0, size, 100):
+        body = {"size": min(100, size - off), "offset": off,
+                "sortField": "intradaymarketcap", "sortType": "DESC",
+                "quoteType": "EQUITY",
+                "query": {"operator": "AND",
+                          "operands": [{"operator": "EQ", "operands": ["region", region]}]}}
+        try:
+            r = _S.post("https://query2.finance.yahoo.com/v1/finance/screener",
+                        params={"crumb": crumb}, json=body,
+                        headers={"Content-Type": "application/json"}, timeout=15)
+            qs = r.json()["finance"]["result"][0]["quotes"]
+        except Exception:
+            break
+        if not qs:
+            break
+        for q in qs:
+            mc = q.get("marketCap")
+            rows.append({
+                "代码": q.get("symbol"), "名称": q.get("shortName") or q.get("longName"),
+                "现价": q.get("regularMarketPrice"),
+                "今日%": q.get("regularMarketChangePercent"),
+                "PE": q.get("trailingPE"), "前瞻PE": q.get("forwardPE"),
+                "市值(亿)": round(mc / 1e8) if mc else None,
+                "币种": q.get("currency"),
+            })
+    return pd.DataFrame(rows)
 
 
 def quote(sym):
