@@ -72,8 +72,23 @@ def build_digest():
     return title, "\n".join(lines)
 
 
+def _load_key():
+    k = os.environ.get("SERVERCHAN_KEY", "").strip()
+    if k:
+        return k
+    # 本地配置兜底(server_chan.json,已gitignore不上传)
+    cfg = os.path.join(BASE, "server_chan.json")
+    if os.path.exists(cfg):
+        import json
+        try:
+            return (json.load(open(cfg, encoding="utf-8")).get("key") or "").strip()
+        except Exception:
+            return ""
+    return ""
+
+
 def send(title, md):
-    key = os.environ.get("SERVERCHAN_KEY", "").strip()
+    key = _load_key()
     if not key:
         print("[未设 SERVERCHAN_KEY,只打印不发送]\n")
         print(title, "\n")

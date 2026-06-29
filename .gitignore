@@ -12,3 +12,4 @@ feed/
 .poll2.sh
 .ghdev.json
 .ghtoken
+server_chan.json
