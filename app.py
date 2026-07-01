@@ -21,6 +21,7 @@ import forward
 import yahoo
 import nav
 import risk_radar
+import storage
 
 st.set_page_config(page_title="选股工作台", page_icon="📈", layout="wide")
 
@@ -94,6 +95,11 @@ def catalysts(rows_tuple):
 @st.cache_data(ttl=1800, show_spinner=False)
 def forward_many(tickers_tuple):
     return forward.fetch_many(list(tickers_tuple))
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def storage_val():
+    return storage.valuation()
 
 
 @st.cache_data(ttl=900, show_spinner=False)
@@ -790,6 +796,45 @@ def page_aimap():
                "数据:stockanalysis/纳斯达克/腾讯 + 深度研究(高盛Prime·BofA·Yicai·TrendForce)。")
 
 
+def page_storage():
+    st.subheader("💾 存储周期驾驶舱")
+    st.caption("把'我说的存储'变成'你信的存储'——一眼判断这轮周期还硬不硬。")
+    st.info(f"🎯 **一句话逻辑**\n\n{storage.THESIS}")
+    st.success(f"**综合判断:** {storage.VERDICT}")
+
+    st.markdown("#### 📊 周期硬指标(事实)")
+    st.caption(f"as-of {storage.FACTS_ASOF} · 来源:{storage.FACTS_SRC}。"
+               "无免费合约价API,我(研究员)手动更新,你喂我新研报/新板我就刷。")
+    arrow = {"up": "🟢 ↑", "down": "🔴 ↓", "flat": "⚪ →"}
+    cp = pd.DataFrame([{"合约价": a, "最新": b, "方向": arrow.get(d, ""), "白话": e}
+                       for a, b, d, e in storage.CONTRACT_PRICE])
+    st.dataframe(cp, use_container_width=True, hide_index=True)
+    fd = pd.DataFrame([{"基本面": a, "现状": b, "含义": c} for a, b, c in storage.FUNDAMENTALS])
+    st.dataframe(fd, use_container_width=True, hide_index=True)
+
+    st.markdown("#### 💹 标的实时估值")
+    st.caption("前瞻PE 越低 = 市场越把它当'周期顶'给白菜价 = 认知差越大。美股实时;韩股无免费源,用研报参考值。")
+    with st.spinner("拉实时估值(缓存30分钟)…"):
+        vv = storage_val()
+    vdf = pd.DataFrame(vv)[["标的", "代码", "PE", "前瞻PE", "明年EPS增速%", "前瞻信号", "一句话edge"]]
+    st.dataframe(vdf, use_container_width=True, hide_index=True,
+                 column_config={"明年EPS增速%": st.column_config.NumberColumn(format="%d%%"),
+                                "一句话edge": st.column_config.TextColumn(width="medium")})
+
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("**🟢 维持牛 · 盯这些:**")
+        for x in storage.WATCH_BULL:
+            st.markdown(f"- {x}")
+    with c2:
+        st.markdown("**⚠️ 转熊 · 预警线:**")
+        for x in storage.WATCH_BEAR:
+            st.markdown(f"- {x}")
+
+    st.caption("怎么选:认知浅→EWY(一键三星+海力士入门);要最强→海力士;要保护垫→MU;要最washed out→三星。"
+               "别一把梭,分批进,让仓位跟着你的认知一起长大。")
+
+
 def _fmt(df, with_market=False):
     cols = ["name", "code"]
     if with_market:
@@ -802,8 +847,8 @@ def _fmt(df, with_market=False):
 
 # ============================================================================
 st.title("📈 选股工作台")
-tabs = st.tabs(["📊 我的持仓", "📈 净值/AUM", "🎯 操作建议", "📰 研报情报", "🔮 前瞻信号",
-                "🧭 按赛道选股", "💡 AI估值+拥挤", "🔬 AI芯片材料", "🚀 太空经济",
+tabs = st.tabs(["📊 我的持仓", "📈 净值/AUM", "🎯 操作建议", "💾 存储驾驶舱", "📰 研报情报",
+                "🔮 前瞻信号", "🧭 按赛道选股", "💡 AI估值+拥挤", "🔬 AI芯片材料", "🚀 太空经济",
                 "🌐 全球选股", "🔍 查股票"])
 with tabs[0]:
     page_portfolio()
@@ -812,19 +857,21 @@ with tabs[1]:
 with tabs[2]:
     page_actions()
 with tabs[3]:
-    page_research()
+    page_storage()
 with tabs[4]:
-    page_forward()
+    page_research()
 with tabs[5]:
-    page_sectors()
+    page_forward()
 with tabs[6]:
-    page_aimap()
+    page_sectors()
 with tabs[7]:
-    page_themes()
+    page_aimap()
 with tabs[8]:
-    page_space()
+    page_themes()
 with tabs[9]:
-    page_pick()
+    page_space()
 with tabs[10]:
+    page_pick()
+with tabs[11]:
     page_lookup()
 st.caption("数据来自公开行情接口，仅供研究，非投资建议。")
