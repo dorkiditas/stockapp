@@ -72,6 +72,12 @@ def valuation():
             row["前瞻PE"] = kref
             row["明年EPS增速%"] = None
             row["前瞻信号"] = "研报参考(韩股无实时源)"
+        elif code == "EWY":  # ETF无EPS前瞻,不跑analyst端点
+            v = aimap._us_valuation(code)
+            row["PE"] = v.get("pe")
+            row["前瞻PE"] = v.get("fpe")
+            row["明年EPS增速%"] = None
+            row["前瞻信号"] = "ETF·一键三星+海力士"
         else:
             v = aimap._us_valuation(code)
             row["PE"] = v.get("pe")
