@@ -22,8 +22,11 @@ import yahoo
 import nav
 import risk_radar
 import storage
+import theme
 
-st.set_page_config(page_title="选股工作台", page_icon="📈", layout="wide")
+st.set_page_config(page_title="ALPHA DESK", page_icon="◆", layout="wide",
+                   initial_sidebar_state="collapsed")
+theme.inject()
 
 
 def _check_password():
@@ -36,15 +39,17 @@ def _check_password():
         return True
     if st.session_state.get("_authed"):
         return True
-    st.title("📈 选股工作台")
-    with st.form("login"):
-        x = st.text_input("密码", type="password")
-        if st.form_submit_button("进入"):
-            if x == pw:
-                st.session_state["_authed"] = True
-                st.rerun()
-            else:
-                st.error("密码不对")
+    theme.header(subtitle="机构级投研工作台 · 请输入访问密码")
+    _, mid, _ = st.columns([1, 1.2, 1])
+    with mid:
+        with st.form("login"):
+            x = st.text_input("密码", type="password")
+            if st.form_submit_button("进入"):
+                if x == pw:
+                    st.session_state["_authed"] = True
+                    st.rerun()
+                else:
+                    st.error("密码不对")
     return False
 
 
@@ -846,7 +851,7 @@ def _fmt(df, with_market=False):
 
 
 # ============================================================================
-st.title("📈 选股工作台")
+theme.header(meta_right=dt.datetime.now().strftime("%Y-%m-%d %H:%M"))
 tabs = st.tabs(["📊 我的持仓", "📈 净值/AUM", "🎯 操作建议", "💾 存储驾驶舱", "📰 研报情报",
                 "🔮 前瞻信号", "🧭 按赛道选股", "💡 AI估值+拥挤", "🔬 AI芯片材料", "🚀 太空经济",
                 "🌐 全球选股", "🔍 查股票"])
