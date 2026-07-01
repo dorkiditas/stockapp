@@ -27,8 +27,32 @@ def fx_risk():
     return out
 
 
+def account_risk():
+    """读 account_risk.json(自动研究员经IB写入),保证金缓冲/杠杆红线。"""
+    import os
+    import json
+    p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "account_risk.json")
+    if not os.path.exists(p):
+        return []
+    try:
+        a = json.load(open(p, encoding="utf-8"))
+    except Exception:
+        return []
+    out = []
+    el = a.get("excess_liquidity")
+    lev = a.get("leverage")
+    if el is not None:
+        if el < 3000:
+            out.append(f"🔴 保证金缓冲仅 ${el:,.0f}(逼近强平线!)——先减仓/平BE止血,别再加仓")
+        elif el < 8000:
+            out.append(f"🟡 保证金缓冲 ${el:,.0f}(偏薄)——大盘一跌就危险,控制杠杆")
+    if lev and float(lev) >= 3:
+        out.append(f"🟡 杠杆 {lev}x(偏高)——降杠杆优先")
+    return out
+
+
 def all_risks():
-    return fx_risk()
+    return account_risk() + fx_risk()
 
 
 if __name__ == "__main__":
