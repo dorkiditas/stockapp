@@ -104,11 +104,6 @@ def send(title, md):
 if __name__ == "__main__":
     import sys
     sys.stdout.reconfigure(encoding="utf-8")
-    try:
-        import nav
-        aum, day = nav.record_snapshot()  # 每天记一个真实AUM快照
-        print(f"[snapshot] {day} AUM≈${aum:,.0f}")
-    except Exception as e:
-        print("[snapshot] skip:", e)
+    # 净值快照改由"自动研究员"(有IB MCP连接)记真实Net Liq,这里不再记gross,避免曲线失真。
     t, md = build_digest()
     send(t, md)
