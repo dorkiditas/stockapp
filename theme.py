@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-ALPHA DESK 视觉主题 —— Claude/Anthropic 暖色编辑风(高级有温度)。
-米白纸感底 + 珊瑚陶土主色 + 衬线标题(Newsreader) + 无衬线正文(Inter)。
+ALPHA DESK 视觉主题 —— 墨绿×金 高级私人财富风(她的专属identity)。
+配色:柔软象牙底 + 深祖母绿主色 + 克制金点缀。字体:Newsreader衬线标题 + Inter正文。
+Logo:手绘SVG α 字标(alpha=超额收益,基金灵魂;非套用任何现成符号)。
 克制、留白、圆角、柔阴影;涨绿跌红保持清晰。所有页面共用。
 """
 import streamlit as st
@@ -9,20 +10,37 @@ import streamlit as st
 BRAND = "Alpha Desk"
 TAGLINE = "全球AI产业链 · 研究与持仓"
 
+# 手绘 α 字标(深绿渐变瓷砖 + 金色内框 + 象牙 α),纯SVG,可无限缩放不失真
+LOGO_SVG = """
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="adg" x1="2" y1="2" x2="38" y2="38" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1E7A56"/><stop offset="1" stop-color="#0E3A29"/>
+    </linearGradient>
+  </defs>
+  <rect x="0.5" y="0.5" width="39" height="39" rx="11" fill="url(#adg)"/>
+  <rect x="3.2" y="3.2" width="33.6" height="33.6" rx="8.6" fill="none"
+        stroke="#C2A46A" stroke-opacity="0.55" stroke-width="1"/>
+  <text x="20" y="28.5" text-anchor="middle" font-family="Georgia,'Newsreader',serif"
+        font-style="italic" font-weight="500" font-size="23" fill="#F4F1E7">&#945;</text>
+</svg>
+"""
+
 _CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,700&family=Inter:wght@400;500;600;700&display=swap');
 :root{
-  --bg:#F4F3EE;          /* 米白纸感底 */
-  --panel:#EEEBE2;       /* 暖浅灰面板 */
-  --card:#FBFAF6;        /* 卡片(近白暖) */
-  --ink:#1F1E1B;         /* 暖近黑 */
-  --muted:#6E6A5F;       /* 暖灰 */
-  --line:#E4E0D4;        /* 暖描边 */
-  --brand:#C96442;       /* 珊瑚陶土(Claude clay) */
-  --brand-2:#D97757;     /* 亮一档 */
-  --brand-soft:#F3E6DE;  /* 淡陶土底 */
-  --up:#3F7D57; --down:#BC4B3C; --gold:#C9A96A;
+  --bg:#F3F5EF;          /* 柔软象牙(微绿) */
+  --panel:#EAEEE4;       /* 浅绿灰面板 */
+  --card:#FBFCF8;        /* 卡片(近白) */
+  --ink:#14201A;         /* 深绿近黑 */
+  --muted:#68706A;       /* 绿灰 */
+  --line:#E0E5DB;        /* 描边 */
+  --brand:#17513A;       /* 深祖母绿(标题/字标) */
+  --brand-2:#1E7A56;     /* 交互祖母绿(按钮/tab/链接) */
+  --brand-soft:#E6EFE8;  /* 淡绿底 */
+  --gold:#B99150;        /* 克制金 */
+  --up:#1E7A56; --down:#BC4B3C;
 }
 html, body, .stApp, [class*="css"]{
   font-family:'Inter','PingFang SC','Microsoft YaHei',-apple-system,sans-serif;
@@ -43,7 +61,7 @@ h1,h2,h3,h4{ font-family:'Newsreader',Georgia,serif !important;
 h2{ font-size:1.5rem; }
 h3{ font-size:1.2rem; margin-top:0.5rem; }
 [data-testid="stCaptionContainer"], .stCaption, small{ color:var(--muted) !important; }
-a, a:visited{ color:var(--brand); }
+a, a:visited{ color:var(--brand-2); }
 
 /* 数字用等宽表格数字,更整齐 */
 [data-testid="stMetricValue"], [data-testid="stDataFrame"]{ font-variant-numeric:tabular-nums; }
@@ -52,29 +70,27 @@ a, a:visited{ color:var(--brand); }
 .ad-header{ display:flex; align-items:center; justify-content:space-between;
   padding:2px 2px 16px; border-bottom:1px solid var(--line); margin-bottom:14px; }
 .ad-brand{ display:flex; align-items:center; gap:14px; }
-.ad-mark{ width:38px; height:38px; border-radius:11px; font-size:18px;
-  background:linear-gradient(135deg,var(--brand),var(--brand-2));
-  display:flex; align-items:center; justify-content:center; color:#FBFAF6; font-weight:700;
-  box-shadow:0 6px 18px rgba(201,100,66,.26); }
-.ad-name{ font-family:'Newsreader',Georgia,serif; font-size:1.6rem; font-weight:600;
-  letter-spacing:0.01em; color:var(--ink); line-height:1; }
+.ad-mark{ width:40px; height:40px; line-height:0;
+  filter:drop-shadow(0 6px 16px rgba(23,81,58,.26)); }
+.ad-name{ font-family:'Newsreader',Georgia,serif; font-size:1.62rem; font-weight:600;
+  letter-spacing:0.01em; color:var(--brand); line-height:1; }
 .ad-tag{ font-size:0.74rem; color:var(--muted); letter-spacing:0.03em; margin-top:6px; }
 .ad-meta{ text-align:right; font-size:0.72rem; color:var(--muted); line-height:1.6; }
 .ad-live{ display:inline-flex; align-items:center; gap:6px; color:var(--up); font-weight:600; }
 .ad-dot{ width:7px; height:7px; border-radius:50%; background:var(--up);
-  box-shadow:0 0 0 3px rgba(63,125,87,.16); }
+  box-shadow:0 0 0 3px rgba(30,122,86,.16); }
 
 /* Tabs 分段控件 */
 .stTabs [data-baseweb="tab-list"]{ gap:2px; border-bottom:1px solid var(--line); }
 .stTabs [data-baseweb="tab"]{ height:42px; padding:0 14px; background:transparent;
   font-weight:600; font-size:0.9rem; color:var(--muted); border-radius:10px 10px 0 0; }
 .stTabs [data-baseweb="tab"]:hover{ color:var(--ink); background:var(--panel); }
-.stTabs [aria-selected="true"]{ color:var(--brand) !important; }
-.stTabs [data-baseweb="tab-highlight"]{ background:var(--brand); height:2.5px; }
+.stTabs [aria-selected="true"]{ color:var(--brand-2) !important; }
+.stTabs [data-baseweb="tab-highlight"]{ background:var(--brand-2); height:2.5px; }
 
 /* Metric 卡片 */
 [data-testid="stMetric"]{ background:var(--card); border:1px solid var(--line);
-  border-radius:16px; padding:15px 17px 13px; box-shadow:0 1px 2px rgba(31,30,27,.04); }
+  border-radius:16px; padding:15px 17px 13px; box-shadow:0 1px 2px rgba(20,32,26,.04); }
 [data-testid="stMetricLabel"]{ color:var(--muted); font-weight:600; }
 [data-testid="stMetricValue"]{ font-weight:700; letter-spacing:-0.02em; }
 
@@ -83,10 +99,10 @@ a, a:visited{ color:var(--brand); }
   border:1px solid var(--line); border-radius:14px; overflow:hidden; }
 
 /* 按钮 */
-.stButton>button{ background:var(--brand); color:#FBFAF6; border:0; border-radius:11px;
+.stButton>button{ background:var(--brand-2); color:#FBFCF8; border:0; border-radius:11px;
   font-weight:600; padding:0.45rem 1.1rem; transition:background .15s; }
-.stButton>button:hover{ background:#b5583a; color:#FBFAF6; }
-.stButton>button:active{ background:#9c4a30; }
+.stButton>button:hover{ background:#186445; color:#FBFCF8; }
+.stButton>button:active{ background:#124e36; }
 
 /* Expander / 输入 / 提示框 */
 [data-testid="stExpander"]{ border:1px solid var(--line); border-radius:14px; background:var(--card); }
@@ -111,7 +127,7 @@ def header(subtitle=None, meta_right=None):
                  f'LIVE</div><div>{meta_right}</div></div>')
     st.markdown(
         f'<div class="ad-header"><div class="ad-brand">'
-        f'<div class="ad-mark">✳</div>'
+        f'<div class="ad-mark">{LOGO_SVG}</div>'
         f'<div><div class="ad-name">{BRAND}</div><div class="ad-tag">{tag}</div></div>'
         f'</div>{right}</div>',
         unsafe_allow_html=True)
