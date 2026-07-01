@@ -19,6 +19,7 @@ import sectors
 import ibkr
 import forward
 import yahoo
+import nav
 
 st.set_page_config(page_title="选股工作台", page_icon="📈", layout="wide")
 
@@ -70,6 +71,13 @@ def u_universe():
 @st.cache_data(ttl=600, show_spinner=False)
 def global_screen(region, size=200):
     return yahoo.global_screen(region, size)
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def nav_data(days):
+    import pandas as _pd
+    h = _pd.read_csv(HOLDINGS_CSV, dtype={"ticker": str})
+    return nav.build(h, days)
 
 
 @st.cache_data(ttl=1800, show_spinner=False)
@@ -415,6 +423,31 @@ def page_themes():
                "封测三巨头 长电/通富/华天(盈利、PS仅3.5)。其余源杰/长光华芯等是资金面不是基本面。")
 
 
+def page_nav():
+    st.subheader("📈 净值 / AUM")
+    st.caption("按你**当前持仓恒定**回算过去的总资产(AUM)与净值曲线——模拟,非真实交易记录。"
+               "美/A/港按固定汇率(USDCNY7.1/USDHKD7.85)折成美元合成。")
+    period = st.radio("区间", ["近3个月", "近6个月", "近1年"], index=1, horizontal=True)
+    days = {"近3个月": 65, "近6个月": 125, "近1年": 250}[period]
+    with st.spinner("回算历史净值(首次约20秒)…"):
+        df, skipped = nav_data(days)
+    if df.empty:
+        st.error("历史数据拉取失败,稍后再试。")
+        return
+    ret = df["净值"].iloc[-1] - 1
+    mdd = (df["净值"] / df["净值"].cummax() - 1).min()
+    c1, c2, c3 = st.columns(3)
+    c1.metric("当前AUM(≈$)", f"${df['AUM($)'].iloc[-1]:,.0f}")
+    c2.metric("区间收益", f"{ret*100:+.1f}%")
+    c3.metric("最大回撤", f"{mdd*100:.1f}%")
+    tab1, tab2 = st.tabs(["AUM(总资产)", "净值(归一)"])
+    tab1.line_chart(df["AUM($)"])
+    tab2.line_chart(df["净值"])
+    if skipped:
+        st.caption(f"⚠️ 无历史数据、未计入的:{', '.join(skipped)}(如OTC的SIEGY、无源的USO)。"
+                   "汇率为固定近似,曲线形状为主、绝对值仅供参考。")
+
+
 def page_actions():
     st.subheader("🎯 我的操作建议")
     st.caption("我的判断(基于研报+实时数据+AI产业链规律)+ 每天最新信号。"
@@ -750,26 +783,29 @@ def _fmt(df, with_market=False):
 
 # ============================================================================
 st.title("📈 选股工作台")
-tabs = st.tabs(["📊 我的持仓", "🎯 操作建议", "📰 研报情报", "🔮 前瞻信号", "🧭 按赛道选股",
-                "💡 AI估值+拥挤", "🔬 AI芯片材料", "🚀 太空经济", "🌐 全球选股", "🔍 查股票"])
+tabs = st.tabs(["📊 我的持仓", "📈 净值/AUM", "🎯 操作建议", "📰 研报情报", "🔮 前瞻信号",
+                "🧭 按赛道选股", "💡 AI估值+拥挤", "🔬 AI芯片材料", "🚀 太空经济",
+                "🌐 全球选股", "🔍 查股票"])
 with tabs[0]:
     page_portfolio()
 with tabs[1]:
-    page_actions()
+    page_nav()
 with tabs[2]:
-    page_research()
+    page_actions()
 with tabs[3]:
-    page_forward()
+    page_research()
 with tabs[4]:
-    page_sectors()
+    page_forward()
 with tabs[5]:
-    page_aimap()
+    page_sectors()
 with tabs[6]:
-    page_themes()
+    page_aimap()
 with tabs[7]:
-    page_space()
+    page_themes()
 with tabs[8]:
-    page_pick()
+    page_space()
 with tabs[9]:
+    page_pick()
+with tabs[10]:
     page_lookup()
 st.caption("数据来自公开行情接口，仅供研究，非投资建议。")
