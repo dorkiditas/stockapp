@@ -5,6 +5,7 @@
 历史源:美股=纳斯达克chart;A股/港股=腾讯K线(web.ifzq.gtimg.cn)。
 说明:按"当前持仓恒定"回算,不含历史加减仓,是模拟净值不是真实交易记录。
 """
+import os
 import re
 import datetime as dt
 import requests
@@ -12,6 +13,8 @@ import pandas as pd
 import tencent
 
 USDCNY, USDHKD = 7.1, 7.85
+BASE = os.path.dirname(os.path.abspath(__file__))
+SNAP = os.path.join(BASE, "nav_snapshots.csv")  # 真实每日AUM快照(本地,不上传)
 _S = requests.Session()
 _S.headers.update({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
@@ -82,6 +85,46 @@ def build(holdings_df, days=250):
     aum = df.sum(axis=1)
     out = pd.DataFrame({"AUM($)": aum.round(0), "净值": (aum / aum.iloc[0]).round(4)})
     return out, skipped
+
+
+def record_snapshot():
+    """记录当日实时AUM(美元)到 nav_snapshots.csv,每天一条(同日覆盖)。给'从今天起'的真实净值用。"""
+    h = pd.read_csv(os.path.join(BASE, "holdings.csv"), dtype={"ticker": str})
+    h["symbol"] = h["ticker"].apply(tencent.to_symbol)
+    q = tencent.quote(h["ticker"].tolist())
+    m = h.merge(q[["code", "market", "price"]], left_on="symbol", right_on="code", how="left")
+    aum = 0.0
+    for _, r in m.iterrows():
+        p = r["price"]
+        if p is None or pd.isna(p):
+            continue
+        v = p * r["shares"]
+        if r["market"] == "A股":
+            v /= USDCNY
+        elif r["market"] == "港股":
+            v /= USDHKD
+        aum += v
+    today = dt.date.today().isoformat()
+    rows = {}
+    if os.path.exists(SNAP):
+        for ln in open(SNAP, encoding="utf-8").read().splitlines()[1:]:
+            if "," in ln:
+                d, a = ln.split(",", 1)
+                rows[d] = a
+    rows[today] = f"{aum:.0f}"
+    with open(SNAP, "w", encoding="utf-8") as f:
+        f.write("date,aum_usd\n")
+        for d in sorted(rows):
+            f.write(f"{d},{rows[d]}\n")
+    return aum, today
+
+
+def load_snapshots():
+    if not os.path.exists(SNAP):
+        return pd.DataFrame()
+    df = pd.read_csv(SNAP)
+    df["date"] = pd.to_datetime(df["date"])
+    return df.set_index("date")
 
 
 if __name__ == "__main__":

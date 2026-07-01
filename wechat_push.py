@@ -104,5 +104,11 @@ def send(title, md):
 if __name__ == "__main__":
     import sys
     sys.stdout.reconfigure(encoding="utf-8")
+    try:
+        import nav
+        aum, day = nav.record_snapshot()  # 每天记一个真实AUM快照
+        print(f"[snapshot] {day} AUM≈${aum:,.0f}")
+    except Exception as e:
+        print("[snapshot] skip:", e)
     t, md = build_digest()
     send(t, md)

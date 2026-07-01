@@ -257,7 +257,8 @@ def page_portfolio():
     m["盈亏"] = None
     m.loc[has_cost, "盈亏"] = ((m["price"] - m["cost"]) * m["shares"]).round(0)
 
-    m["盈亏%"] = ((m["price"] / m["cost"] - 1) * 100).round(1)
+    # 盈亏%对多空都正确(空头股价涨=亏)
+    m["盈亏%"] = ((m["price"] - m["cost"]) * m["shares"] / (m["cost"] * m["shares"]).abs() * 100).round(1)
     # 按币种分开统计(美元/人民币不能混加)
     cur = {"美股": "$", "A股": "¥", "港股": "HK$"}
     groups = [g for g in ["美股", "A股", "港股"] if (m["market"] == g).any()]
@@ -427,6 +428,16 @@ def page_nav():
     st.subheader("📈 净值 / AUM")
     st.caption("按你**当前持仓恒定**回算过去的总资产(AUM)与净值曲线——模拟,非真实交易记录。"
                "美/A/港按固定汇率(USDCNY7.1/USDHKD7.85)折成美元合成。")
+    # 真实快照(从今天起攒的)优先;够2天就单独显示一条真实曲线
+    real = nav.load_snapshots()
+    if len(real) >= 2:
+        real["净值"] = (real["aum_usd"] / real["aum_usd"].iloc[0]).round(4)
+        rr = real["净值"].iloc[-1] - 1
+        st.success(f"✅ 真实净值(从 {real.index[0].date()} 起记录):"
+                   f"{rr*100:+.1f}% · 当前AUM ${real['aum_usd'].iloc[-1]:,.0f}")
+        st.line_chart(real["aum_usd"].rename("真实AUM($)"))
+        st.caption("这条是每天真实快照攒的(空头/汇率近似)。下面是按当前持仓回算的模拟历史,供参考。")
+
     period = st.radio("区间", ["近3个月", "近6个月", "近1年"], index=1, horizontal=True)
     days = {"近3个月": 65, "近6个月": 125, "近1年": 250}[period]
     with st.spinner("回算历史净值(首次约20秒)…"):
