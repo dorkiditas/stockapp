@@ -20,6 +20,7 @@ import ibkr
 import forward
 import yahoo
 import nav
+import risk_radar
 
 st.set_page_config(page_title="选股工作台", page_icon="📈", layout="wide")
 
@@ -459,8 +460,15 @@ def page_nav():
                    "汇率为固定近似,曲线形状为主、绝对值仅供参考。")
 
 
+@st.cache_data(ttl=1800, show_spinner=False)
+def _risks():
+    return risk_radar.all_risks()
+
+
 def page_actions():
     st.subheader("🎯 我的操作建议")
+    for w in _risks():
+        (st.error if w.startswith("🔴") else st.warning)(f"风险雷达:{w}")
     st.caption("我的判断(基于研报+实时数据+AI产业链规律)+ 每天最新信号。"
                "核心打法:从挤爆的算力核心,换到便宜+预期上修+被低配的AI邻接(存储/CIEN)。")
     st_autorefresh(interval=120000, key="act_auto")

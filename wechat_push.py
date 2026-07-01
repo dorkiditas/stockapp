@@ -32,6 +32,18 @@ def build_digest():
 
     lines = [f"## 📈 选股工作台 · {today}", ""]
 
+    # 风险雷达(只报警,不替你决策)
+    try:
+        import risk_radar
+        risks = risk_radar.all_risks()
+        if risks:
+            lines.append("### ⚠️ 风险雷达")
+            for w in risks:
+                lines.append(f"- {w}")
+            lines.append("")
+    except Exception:
+        pass
+
     # 持仓快照(分币种)
     lines.append("### 💰 持仓")
     for g in ["美股", "A股", "港股"]:
