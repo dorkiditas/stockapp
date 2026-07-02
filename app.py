@@ -879,4 +879,4 @@ with tabs[10]:
     page_pick()
 with tabs[11]:
     page_lookup()
-st.caption("数据来自公开行情接口，仅供研究，非投资建议。")
+st.caption("Alpha Desk · 墨绿金主题 build 2026.07.01b · 数据来自公开行情接口，仅供研究，非投资建议。")
