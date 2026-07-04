@@ -4,7 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Alpha Desk</title>
-<meta http-equiv="refresh" content="1;url=https://rankings-apollo-murray-pot.trycloudflare.com">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#17513A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Alpha Desk">
 <style>
   body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
        background:#F3F5EF;font-family:Georgia,'PingFang SC',serif;color:#14201A}
@@ -26,5 +31,12 @@
   <p><a id="go" href="https://rankings-apollo-murray-pot.trycloudflare.com">点这里直接进入</a></p>
   <p style="margin-top:14px;font-size:12px">家里WiFi可用固定地址:<br><a href="http://10.0.66.237:8501">http://10.0.66.237:8501</a></p>
 </div>
+<script>
+  var TARGET = "https://rankings-apollo-murray-pot.trycloudflare.com";
+  document.getElementById("go").href = TARGET;
+  var standalone = window.navigator.standalone === true ||
+                   (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+  setTimeout(function(){ window.location.href = TARGET; }, standalone ? 300 : 3500);
+</script>
 </body>
 </html>
