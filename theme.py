@@ -118,6 +118,29 @@ def inject():
     st.markdown(_CSS, unsafe_allow_html=True)
 
 
+def inject_appicon():
+    """把自绘的 α 图标注入真实页面 <head> 作 apple-touch-icon/favicon,
+    让手机'添加到主屏幕'用高级图标,而不是系统瞎生成的灰底首字母。"""
+    import os
+    import base64
+    try:
+        from streamlit.components.v1 import html as _html
+        p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon180.png")
+        b64 = base64.b64encode(open(p, "rb").read()).decode()
+    except Exception:
+        return
+    _html(
+        "<script>(function(){try{"
+        "var h=window.parent.document.head;"
+        "var u='data:image/png;base64," + b64 + "';"
+        "h.querySelectorAll(\"link[rel~='icon'],link[rel^='apple-touch-icon']\")"
+        ".forEach(function(e){e.remove();});"
+        "[180,152,167,120].forEach(function(s){var l=window.parent.document.createElement('link');"
+        "l.rel='apple-touch-icon';l.setAttribute('sizes',s+'x'+s);l.href=u;h.appendChild(l);});"
+        "var f=window.parent.document.createElement('link');f.rel='icon';f.type='image/png';f.href=u;h.appendChild(f);"
+        "}catch(e){}})();</script>", height=0)
+
+
 def header(subtitle=None, meta_right=None):
     """品牌头。subtitle 覆盖默认副标题;meta_right 显示在右侧(如日期)。"""
     tag = subtitle or TAGLINE

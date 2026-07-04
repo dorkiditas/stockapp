@@ -26,9 +26,12 @@ import mlcc
 import radar
 import theme
 
-st.set_page_config(page_title="ALPHA DESK", page_icon="◆", layout="wide",
-                   initial_sidebar_state="collapsed")
+_ICON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon.png")
+st.set_page_config(page_title="Alpha Desk",
+                   page_icon=_ICON if os.path.exists(_ICON) else "◆",
+                   layout="wide", initial_sidebar_state="collapsed")
 theme.inject()
+theme.inject_appicon()  # 注入 apple-touch-icon,让手机主屏用高级α图标(而非灰底首字母)
 
 
 def _check_password():
