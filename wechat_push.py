@@ -80,6 +80,18 @@ def build_digest():
     lines.append("")
     lines.append("> 我的判断,非保证。存储是周期股,加仓非all-in。")
 
+    # 当前可用入口(保活守护 keepalive.py 维护,链接变了也会单独推)
+    lines.append("")
+    lines.append("### 📱 打开工作台")
+    lines.append("- 家里WiFi(固定):http://10.0.66.237:8501")
+    try:
+        turl = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                 "tunnel_url.txt"), encoding="utf-8").read().strip()
+        if turl:
+            lines.append(f"- 外网:{turl}")
+    except Exception:
+        pass
+
     title = f"选股日报 {today} · 建MU/平BE"
     return title, "\n".join(lines)
 
