@@ -446,6 +446,17 @@ def page_themes():
                "封测三巨头 长电/通富/华天(盈利、PS仅3.5)。其余源杰/长光华芯等是资金面不是基本面。")
 
 
+def _lazy(key, label, est):
+    """重数据页闸门:未点开前不拉数据 → 全站秒开;点一下才加载,缓存期内再进秒开。"""
+    if st.session_state.get(key):
+        return True
+    st.info(f"⏱️ 本区数据较重({est})。点下面加载,之后缓存期内秒开。")
+    if st.button(label, key=key + "_btn"):
+        st.session_state[key] = True
+        st.rerun()
+    return False
+
+
 def page_nav():
     st.subheader("📈 净值 / AUM")
     st.caption("按你**当前持仓恒定**回算过去的总资产(AUM)与净值曲线——模拟,非真实交易记录。"
@@ -460,6 +471,8 @@ def page_nav():
         st.line_chart(real["aum_usd"].rename("真实AUM($)"))
         st.caption("这条是每天真实快照攒的(空头/汇率近似)。下面是按当前持仓回算的模拟历史,供参考。")
 
+    if not _lazy("_load_nav", "🔄 加载模拟回测曲线", "首次约20秒"):
+        return
     period = st.radio("区间", ["近3个月", "近6个月", "近1年"], index=1, horizontal=True)
     days = {"近3个月": 65, "近6个月": 125, "近1年": 250}[period]
     with st.spinner("回算历史净值(首次约20秒)…"):
@@ -759,6 +772,8 @@ def page_space():
     st.subheader("🚀 太空经济")
     st.caption("你持仓 NASA(Tema太空ETF)、DXYZ(SpaceX代理)所在的主题。按子赛道铺全球标的+实时估值。"
                "底子:MS《Space 60》——FY27国防预算$1.5万亿、太空军预算+77%至$71B,主题热度十年最高。")
+    if not _lazy("_load_space", "🔄 加载太空板块估值", "约15-30秒"):
+        return
     with st.spinner("拉取太空板块行情+估值…"):
         data = space_data()
     for grp, rows in data.items():
@@ -780,6 +795,8 @@ def page_aimap():
     st.subheader("💡 AI估值+拥挤地图")
     st.caption("结合实时估值(PE/前瞻PE/PS)与拥挤度(卖方目标隐含涨幅、52周位置),"
                "加我的决断标签。背景:芯片是BofA史上最拥挤交易(80%),核心打法=从拥挤往洼地换仓。")
+    if not _lazy("_load_aimap", "🔄 加载 估值+拥挤+新闻催化", "首次约30-60秒,是全站最重的一页"):
+        return
     with st.spinner("拉取估值+拥挤数据(首次约30秒,之后缓存)…"):
         data = ai_map()
     # 近期催化:扫所有标的近14天新闻
