@@ -23,6 +23,7 @@ import nav
 import risk_radar
 import storage
 import mlcc
+import radar
 import theme
 
 st.set_page_config(page_title="ALPHA DESK", page_icon="◆", layout="wide",
@@ -882,6 +883,29 @@ def page_mlcc():
                "别拿它挤掉存储:同样'AI缺货',存储6-8x、MLCC 80-238x,非对称性一目了然。")
 
 
+def page_radar():
+    st.subheader("📡 赛道机会雷达")
+    st.caption("全球AI卡脖子环节,按 产业景气度 × 竞争格局 × 壁垒 排序(主轴)。"
+               "估值次要——但'满足条件又便宜'=⭐甜点,今年优先。")
+    rr = radar.rows()
+    st.info("🎯 **怎么读:** 主轴分 = 景气+格局+壁垒(满分15)。⭐ = 三者都强 **且估值不贵**,"
+            "今年最该埋伏的甜点。🔴 = 生意顶级但估值透支(好生意坏价格)。")
+    df = pd.DataFrame(rr)[["赛道", "⭐", "主轴分", "景气", "格局", "壁垒", "估值",
+                           "全球赢家(可交易)", "我的判定", "卡位"]]
+    st.dataframe(df, use_container_width=True, hide_index=True,
+                 column_config={
+                     "主轴分": st.column_config.NumberColumn("主轴分/15", help="景气+格局+壁垒"),
+                     "全球赢家(可交易)": st.column_config.TextColumn(width="medium"),
+                     "卡位": st.column_config.TextColumn(width="large"),
+                 })
+    sweet = [r for r in rr if r["⭐"]]
+    st.markdown("#### ⭐ 今年甜点(高景气 + 强格局 + 高壁垒 且 估值不贵)")
+    for r in sweet:
+        st.markdown(f"- **{r['赛道']}** — {r['全球赢家(可交易)']} · {r['卡位']}")
+    st.caption("市场:US美股 · .T东京 · .KS首尔 · .HK港 · .TW台 · .AS阿姆斯特丹,IBKR均可交易。"
+               "估值档为研究员判定;个股买法分批控仓(缓冲优先)。数据 curated 2026-07,随景气更新。")
+
+
 def _fmt(df, with_market=False):
     cols = ["name", "code"]
     if with_market:
@@ -895,7 +919,7 @@ def _fmt(df, with_market=False):
 # ============================================================================
 theme.header(meta_right=dt.datetime.now().strftime("%Y-%m-%d %H:%M"))
 tabs = st.tabs(["📊 我的持仓", "📈 净值/AUM", "🎯 操作建议", "💾 存储驾驶舱", "🔩 MLCC驾驶舱",
-                "📰 研报情报", "🔮 前瞻信号", "🧭 按赛道选股", "💡 AI估值+拥挤", "🔬 AI芯片材料",
+                "📰 研报情报", "🔮 前瞻信号", "📡 赛道机会雷达", "💡 AI估值+拥挤", "🔬 AI芯片材料",
                 "🚀 太空经济", "🌐 全球选股", "🔍 查股票"])
 with tabs[0]:
     page_portfolio()
@@ -912,7 +936,7 @@ with tabs[5]:
 with tabs[6]:
     page_forward()
 with tabs[7]:
-    page_sectors()
+    page_radar()
 with tabs[8]:
     page_aimap()
 with tabs[9]:
