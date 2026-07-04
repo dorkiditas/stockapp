@@ -98,15 +98,32 @@ def ensure_tunnel():
     return old, False
 
 
+def _update_pages(url):
+    """改写 docs/index.html 的跳转目标并 git push → 固定网址 dorkiditas.github.io/stockapp 永远指向活入口。"""
+    try:
+        p = os.path.join(BASE, "docs", "index.html")
+        html = open(p, encoding="utf-8").read()
+        html = re.sub(r"https://[a-z0-9-]+\.trycloudflare\.com", url, html)
+        open(p, "w", encoding="utf-8").write(html)
+        for cmd in (["git", "add", "docs/index.html"],
+                    ["git", "-c", "user.email=xiaoyi.d.lei@gmail.com",
+                     "-c", "user.name=dorkiditas", "commit", "-m", "keepalive: rotate tunnel url"],
+                    ["git", "push", "origin", "main"]):
+            subprocess.run(cmd, cwd=BASE, capture_output=True, timeout=60)
+    except Exception:
+        pass
+
+
 def main():
     app_up = ensure_app()
     url, changed = ensure_tunnel() if app_up else ("", False)
     if changed:
+        _update_pages(url)
         lan = _lan_ip() or "10.0.66.237"
-        _wechat("📱 选股App新地址(自动更新)",
-                f"外网新链接:{url}\n\n"
-                f"家里WiFi固定地址:http://{lan}:8501\n\n"
-                f"密码不变。旧链接作废,不用管为什么,点开就能用。")
+        _wechat("📱 选股App地址已自动更新",
+                f"固定网址(记这个就够):https://dorkiditas.github.io/stockapp\n\n"
+                f"家里WiFi:http://{lan}:8501\n\n"
+                f"(外网直达:{url})密码不变,点开就能用。")
 
 
 if __name__ == "__main__":
