@@ -401,21 +401,8 @@ def page_pick():
 
 
 # ============================================================================
-# 页面 3：查股票（任意市场，随手查）
+# (原「查股票」页已删——纯报价查询是commodity、零edge,券商App都比它好。tab位留给有judgment的内容。)
 # ============================================================================
-def page_lookup():
-    st.subheader("🔍 查股票")
-    st.write("输入代码看实时行情。A股填6位(000338)，港股加.HK(0700.HK)，美股填字母(AVGO)。")
-    raw = st.text_input("代码（多个用逗号隔开）", "AVGO, NVDA, 000338, 0700.HK")
-    if raw.strip():
-        df = quote(tuple(parse_codes(raw)))
-        if df.empty:
-            st.warning("没查到，检查代码格式。")
-        else:
-            st.dataframe(_fmt(df, with_market=True), use_container_width=True,
-                         column_config={"今日%": st.column_config.NumberColumn(format="%.2f%%")})
-
-
 def page_themes():
     st.subheader("🔬 AI芯片材料（陈立武押注的5条线）")
     st.caption("英特尔CEO陈立武点名的后摩尔时代5大方向 → A股/美股标的实时映射。"
@@ -940,7 +927,7 @@ def _fmt(df, with_market=False):
 theme.header(meta_right=dt.datetime.now().strftime("%Y-%m-%d %H:%M"))
 tabs = st.tabs(["📊 我的持仓", "📈 净值/AUM", "🎯 操作建议", "💾 存储驾驶舱", "🔩 MLCC驾驶舱",
                 "📰 研报情报", "🔮 前瞻信号", "📡 赛道机会雷达", "💡 AI估值+拥挤", "🔬 AI芯片材料",
-                "🚀 太空经济", "🌐 全球选股", "🔍 查股票"])
+                "🚀 太空经济", "🌐 全球选股"])
 with tabs[0]:
     page_portfolio()
 with tabs[1]:
@@ -965,6 +952,4 @@ with tabs[10]:
     page_space()
 with tabs[11]:
     page_pick()
-with tabs[12]:
-    page_lookup()
-st.caption("Alpha Desk · 墨绿金主题 build 2026.07.01b · 数据来自公开行情接口，仅供研究，非投资建议。")
+st.caption("Alpha Desk · 墨绿金主题 build 2026.07.04c · 数据来自公开行情接口，仅供研究，非投资建议。")
