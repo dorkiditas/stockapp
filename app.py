@@ -22,6 +22,7 @@ import yahoo
 import nav
 import risk_radar
 import storage
+import mlcc
 import theme
 
 st.set_page_config(page_title="ALPHA DESK", page_icon="◆", layout="wide",
@@ -105,6 +106,11 @@ def forward_many(tickers_tuple):
 @st.cache_data(ttl=1800, show_spinner=False)
 def storage_val():
     return storage.valuation()
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def mlcc_val():
+    return mlcc.valuation()
 
 
 @st.cache_data(ttl=900, show_spinner=False)
@@ -840,6 +846,42 @@ def page_storage():
                "别一把梭,分批进,让仓位跟着你的认知一起长大。")
 
 
+def page_mlcc():
+    st.subheader("🔩 MLCC 驾驶舱")
+    st.caption("AI服务器MLCC缺货涨价周期——真主题,但看清估值再动手。")
+    st.info(f"🎯 **一句话逻辑**\n\n{mlcc.THESIS}")
+    st.warning(f"**我的判断:** {mlcc.VERDICT}")
+
+    st.markdown("#### 📊 涨价 & 供需(事实)")
+    st.caption(f"as-of {mlcc.FACTS_ASOF} · 来源:{mlcc.FACTS_SRC}")
+    arrow = {"up": "🟢 ↑", "down": "🔴 ↓", "flat": "⚪ →"}
+    ph = pd.DataFrame([{"环节": a, "最新": b, "方向": arrow.get(d, "")} for a, b, d in mlcc.PRICE_HIKES])
+    st.dataframe(ph, use_container_width=True, hide_index=True)
+    sp = pd.DataFrame([{"供需": a, "现状": b, "含义": c} for a, b, c in mlcc.SUPPLY])
+    st.dataframe(sp, use_container_width=True, hide_index=True)
+
+    st.markdown("#### 💹 标的估值(全场都不便宜=关键)")
+    st.caption("A股实时PE/PB(腾讯);日韩台龙头无免费源,用研报参考PER。对照:存储龙头前瞻仅6~8x。")
+    with st.spinner("拉A股实时估值…"):
+        vv = mlcc_val()
+    vdf = pd.DataFrame(vv)[["标的", "代码", "现价", "PE", "PB", "一句话"]]
+    st.dataframe(vdf, use_container_width=True, hide_index=True,
+                 column_config={"一句话": st.column_config.TextColumn(width="large")})
+
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("**🟢 维持景气 · 盯这些:**")
+        for x in mlcc.WATCH_BULL:
+            st.markdown(f"- {x}")
+    with c2:
+        st.markdown("**⚠️ 见顶 / 风险 · 预警:**")
+        for x in mlcc.WATCH_BEAR:
+            st.markdown(f"- {x}")
+
+    st.caption("怎么做:先修保证金缓冲,再谈加仓;真要MLCC只做小卫星(≤5%)——质量选村田、A股选三环。"
+               "别拿它挤掉存储:同样'AI缺货',存储6-8x、MLCC 80-238x,非对称性一目了然。")
+
+
 def _fmt(df, with_market=False):
     cols = ["name", "code"]
     if with_market:
@@ -852,9 +894,9 @@ def _fmt(df, with_market=False):
 
 # ============================================================================
 theme.header(meta_right=dt.datetime.now().strftime("%Y-%m-%d %H:%M"))
-tabs = st.tabs(["📊 我的持仓", "📈 净值/AUM", "🎯 操作建议", "💾 存储驾驶舱", "📰 研报情报",
-                "🔮 前瞻信号", "🧭 按赛道选股", "💡 AI估值+拥挤", "🔬 AI芯片材料", "🚀 太空经济",
-                "🌐 全球选股", "🔍 查股票"])
+tabs = st.tabs(["📊 我的持仓", "📈 净值/AUM", "🎯 操作建议", "💾 存储驾驶舱", "🔩 MLCC驾驶舱",
+                "📰 研报情报", "🔮 前瞻信号", "🧭 按赛道选股", "💡 AI估值+拥挤", "🔬 AI芯片材料",
+                "🚀 太空经济", "🌐 全球选股", "🔍 查股票"])
 with tabs[0]:
     page_portfolio()
 with tabs[1]:
@@ -864,19 +906,21 @@ with tabs[2]:
 with tabs[3]:
     page_storage()
 with tabs[4]:
-    page_research()
+    page_mlcc()
 with tabs[5]:
-    page_forward()
+    page_research()
 with tabs[6]:
-    page_sectors()
+    page_forward()
 with tabs[7]:
-    page_aimap()
+    page_sectors()
 with tabs[8]:
-    page_themes()
+    page_aimap()
 with tabs[9]:
-    page_space()
+    page_themes()
 with tabs[10]:
-    page_pick()
+    page_space()
 with tabs[11]:
+    page_pick()
+with tabs[12]:
     page_lookup()
 st.caption("Alpha Desk · 墨绿金主题 build 2026.07.01b · 数据来自公开行情接口，仅供研究，非投资建议。")

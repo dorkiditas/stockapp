@@ -1,0 +1,95 @@
+# -*- coding: utf-8 -*-
+"""
+MLCC 驾驶舱 —— AI服务器MLCC缺货涨价周期 + 标的估值 + 我的判断。
+定位:真主题、但龙头已price满(80-170x)、且是会round-trip的周期股→只配小卫星仓,核心火力留给存储。
+A股标的用腾讯实时PE/PB;日韩台龙头无免费源→用研报参考PER。
+"""
+import tencent
+
+THESIS = ("近十年最强MLCC涨价周期:AI服务器MLCC用量是普通服务器的10-15倍,高容MLCC自2月 +50-60%、"
+          "稀缺料翻倍,高端缺口至少到2027H1。但——龙头贵到80-170倍PER,而且是会round-trip的周期股"
+          "(2018涨价狂欢→2019库存崩)。同样'AI缺货'故事,存储龙头才6-8倍。非对称性在存储那边。")
+
+VERDICT = ("🟡 真主题但全场已price满:日本龙头80-170x、A股三环96x/风华238x/火炬160x——都不便宜。"
+           "只配小卫星仓(≤5%),且要在保证金缓冲修好之后。质量选村田(别碰170x太阳诱电);"
+           "A股弹性选三环(但也96x)。核心火力仍留给存储(6-8x才是非对称在的地方)。")
+
+FACTS_ASOF = "2026-07-03"
+FACTS_SRC = "36Kr / TradingKey / 村田专家纪要 / 国联民生「行情未央」"
+
+# (环节, 最新, 方向)
+PRICE_HIKES = [
+    ("高容AI服务器MLCC", "自2月 +50-60%,稀缺料翻倍", "up"),
+    ("标准MLCC现货", "自2月 +15-20%", "up"),
+    ("村田 Murata", "4系列 +15-35%(3月)", "up"),
+    ("三星电机", "+15-20%(5月)", "up"),
+    ("太阳诱电", "+15-25%(Q2)", "up"),
+    ("国巨 Yageo(经Kemet)", "+10-15%", "up"),
+]
+SUPPLY = [
+    ("高端产线利用率", ">90%", "满载"),
+    ("交期", "8周 → 24周", "极度紧张"),
+    ("book-to-bill", ">1 已连续数季", "缺货"),
+    ("产能缓解", "村田服务器产能26Q4、更多高端27Q4;三星菲律宾27、太诱韩国27", "高端缺口至少到2027H1"),
+    ("AI服务器含量", "普通服务器的 10-15 倍", "结构性新需求"),
+]
+
+WATCH_BULL = [
+    "高容MLCC交期继续拉长 / 现货续涨",
+    "AI服务器放量(英伟达GB300/Rubin)带订单",
+    "国产厂突破进入高端AI供应链(现被挡在外)",
+]
+WATCH_BEAR = [
+    "⚠️ 高端现货涨价转平 = 见顶第一信号",
+    "⚠️ 消费电子/手机需求转弱(占MLCC大头)",
+    "⚠️ 2027产能集中释放 → 重演2019库存崩",
+    "⚠️ 太阳诱电170x/村田80x = 估值透支,回调幅度会大",
+    "⚠️ A股科技泡沫顶(科创PE已超2015),国产小票易踩踏",
+]
+
+# A股标的(腾讯实时)
+NAMES_A = ["300408", "000636", "603678"]
+A_NOTE = {
+    "300408": "三环集团·最优质国产,兼AI陶瓷封装期权(首选国产)",
+    "000636": "风华高科·国产替代弹性,但未进英伟达服务器链",
+    "603678": "火炬电子·太阳诱电国内大代理+军品,享优先保供",
+}
+# 日韩台龙头(无免费源→研报参考PER)
+FOREIGN = [
+    ("6981.T", "村田 Murata", "🇯🇵", "全球#1(份额33%),质量最高;前瞻-80x偏贵但最稳", 80),
+    ("6976.T", "太阳诱电", "🇯🇵", "PER>170x=全场最贵,自评估值过热,别追", 170),
+    ("009150.KS", "三星电机", "🇰🇷", "#2(份额22%),兼玻璃基板先进封装期权", None),
+    ("2327.TW", "国巨 Yageo", "🇹🇼", "被动件巨头,已收购Kemet,涨价直接受益", None),
+]
+
+
+def valuation():
+    """返回标的估值行。A股实时PE/PB(腾讯,DataFrame,code带sz/sh前缀);外股用研报参考PER。"""
+    out = []
+    rows = {}
+    try:
+        df = tencent.quote(NAMES_A)
+        for _, r in df.iterrows():
+            rows[str(r["code"])[-6:]] = r
+    except Exception:
+        pass
+    for code in NAMES_A:
+        r = rows.get(code)
+        if r is not None:
+            out.append({"标的": f"🇨🇳 {r['name']}", "代码": code, "现价": r["price"],
+                        "PE": r["pe"], "PB": r["pb"], "一句话": A_NOTE.get(code, "")})
+        else:
+            out.append({"标的": f"🇨🇳 {code}", "代码": code, "现价": None,
+                        "PE": None, "PB": None, "一句话": A_NOTE.get(code, "")})
+    for code, name, flag, note, per in FOREIGN:
+        out.append({"标的": f"{flag} {name}", "代码": code, "现价": None,
+                    "PE": per, "PB": None, "一句话": note})
+    return out
+
+
+if __name__ == "__main__":
+    import sys
+    sys.stdout.reconfigure(encoding="utf-8")
+    print("VERDICT:", VERDICT)
+    for r in valuation():
+        print(r)
