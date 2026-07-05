@@ -92,7 +92,13 @@ def ensure_tunnel():
                 break
         except Exception:
             pass
-    if url and _ok(url + "/healthz", t=15):
+    if url:
+        # 新trycloudflare域名DNS生效可能要1-2分钟,耐心等;
+        # 即便等不到也照样发布——新链接迟早通,死链接永远死(2026-07-05修:上一版15秒就放弃导致固定网址挂死链)
+        for _ in range(12):
+            if _ok(url + "/healthz", t=10):
+                break
+            time.sleep(5)
         open(URL_FILE, "w", encoding="utf-8").write(url)
         return url, True  # 新链接
     return old, False
