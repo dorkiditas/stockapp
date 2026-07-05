@@ -82,10 +82,11 @@ def ensure_tunnel():
                           "--protocol", "http2"],
                          startupinfo=si, stdout=f, stderr=subprocess.STDOUT)
     url = ""
-    for _ in range(20):
+    for _ in range(30):
         time.sleep(2)
         try:
-            m = re.search(r"https://[a-z0-9-]+\.trycloudflare\.com",
+            # 排除 api.trycloudflare.com(cloudflared自家API,2026-07-05曾被误发布成入口)
+            m = re.search(r"https://(?!api\.)[a-z0-9-]+\.trycloudflare\.com",
                           open(CF_LOG, errors="ignore").read())
             if m:
                 url = m.group(0)
