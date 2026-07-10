@@ -16,7 +16,6 @@ import market
 import aimap
 import catalyst
 import sectors
-import ibkr
 import forward
 import yahoo
 import nav
@@ -205,48 +204,19 @@ THEMES = {
 # ============================================================================
 # 页面 1：我的持仓（打开即自动显示，无需任何操作）
 # ============================================================================
-def _ib_section():
-    """IBKR Flex 只读同步(可选)。"""
-    cfg = ibkr.load_config()
-    with st.expander("🔗 连接 IBKR(只读自动同步持仓 · 可选)", expanded=not cfg):
-        if cfg:
-            st.success("✅ 已连接 IBKR。点下面按钮把账户真实持仓(含成本)同步进来。")
-            if st.button("🔄 从 IB 同步持仓"):
-                try:
-                    with st.spinner("从 IBKR 拉取持仓…(报表生成可能要十几秒)"):
-                        df = ibkr.sync_to_holdings(cfg["token"], cfg["query_id"], HOLDINGS_CSV)
-                    st.cache_data.clear()
-                    st.success(f"同步成功,共 {len(df)} 只。")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"同步失败:{e}")
-            if st.button("断开(删除令牌)"):
-                try:
-                    os.remove(ibkr.CONFIG)
-                except OSError:
-                    pass
-                st.rerun()
-        else:
-            st.caption("在 IBKR 网页生成只读的 Flex 令牌后填到这里(步骤问我)。只读,不能下单/转账。")
-            tok = st.text_input("Flex Token", type="password")
-            qid = st.text_input("Query ID")
-            if st.button("保存并同步") and tok and qid:
-                try:
-                    with st.spinner("验证并拉取持仓…"):
-                        df = ibkr.sync_to_holdings(tok, qid, HOLDINGS_CSV)
-                    ibkr.save_config(tok, qid)
-                    st.cache_data.clear()
-                    st.success(f"连接成功,同步 {len(df)} 只持仓。")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"失败:{e}(检查 token/Query ID,且 Query 里要包含 Open Positions)")
+def _sync_status():
+    """持仓由 Max 直连 IB 同步、写入 holdings.csv。显示最后更新时间。"""
+    if os.path.exists(HOLDINGS_CSV):
+        ts = dt.datetime.fromtimestamp(os.path.getmtime(HOLDINGS_CSV)).strftime("%m-%d %H:%M")
+        st.caption(f"🔗 持仓由 **Max 直连 IB** 同步 · 数据最后更新 **{ts}**"
+                   "（Max 早晚例行或你要求时刷新；价格每 60 秒自动拉新）")
 
 
 def page_portfolio():
     st.subheader("📊 我的持仓")
     # 每60秒自动重跑本页（自动拉新价，你什么都不用点）
     st_autorefresh(interval=60000, key="pf_auto")
-    _ib_section()
+    _sync_status()
     if not os.path.exists(HOLDINGS_CSV):
         st.info("还没有持仓表。去『查股票』页可以随时看行情。")
         return
