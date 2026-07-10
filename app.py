@@ -23,6 +23,7 @@ import risk_radar
 import storage
 import mlcc
 import radar
+import chips
 import theme
 
 _ICON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon.png")
@@ -114,6 +115,11 @@ def storage_val():
 @st.cache_data(ttl=1800, show_spinner=False)
 def mlcc_val():
     return mlcc.valuation()
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def chips_data():
+    return chips.build()
 
 
 @st.cache_data(ttl=900, show_spinner=False)
@@ -823,6 +829,29 @@ def page_storage():
                "别一把梭,分批进,让仓位跟着你的认知一起长大。")
 
 
+def page_chips():
+    st.subheader("🔬 芯片战情室")
+    st.caption("AI芯片核心股的决策面板——不是报价表。两把尺子:PEG(前瞻PE÷明年增速,越低越便宜)"
+               " + 超预期质量(过去4季beat次数×幅度),叠 Max 的判定。按PEG升序=越便宜越靠前。")
+    st.info("🎯 **怎么读**:PEG<0.5=增长白菜价;beat 4/4 且均超%高=盈利被低估、下季大概率再beat;"
+            "PEG高+beat差(如AMD/ARM)=付贵价买次货。**要重仓的,看🟢🥇🥈;🔴是我劝你别碰的。**")
+    with st.spinner("拉芯片股实时估值+前瞻(缓存30分钟)…"):
+        rows = chips_data()
+    df = pd.DataFrame(rows)[["标的", "代码", "PEG", "前瞻PE", "明年增速%", "超预期",
+                             "均超%", "PS", "卖方评级", "Max判定", "卡位"]]
+    st.dataframe(df, use_container_width=True, hide_index=True,
+                 column_config={
+                     "PEG": st.column_config.NumberColumn("PEG↓", help="前瞻PE÷明年增速,越低越便宜", format="%.2f"),
+                     "明年增速%": st.column_config.NumberColumn(format="%d%%"),
+                     "均超%": st.column_config.NumberColumn("均超预期%", format="%.1f%%"),
+                     "Max判定": st.column_config.TextColumn(width="medium"),
+                     "卡位": st.column_config.TextColumn(width="large"),
+                 })
+    st.caption("Max判定(2026-07):**AVGO(凸性弹性)+ NVDA(便宜防御)= 黄金对,要重仓的就这俩;**"
+               "MU/TSM是存储/代工压舱;AMD付贵价买次货、INTC政策彩票非格局票、QCOM等7月底手机见底裁判。"
+               "数据实时(stockanalysis+纳斯达克),PEG/beat会随财报刷新。")
+
+
 def page_mlcc():
     st.subheader("🔩 MLCC 驾驶舱")
     st.caption("AI服务器MLCC缺货涨价周期——真主题,但看清估值再动手。")
@@ -894,9 +923,9 @@ def _fmt(df, with_market=False):
 
 # ============================================================================
 theme.header(meta_right=dt.datetime.now().strftime("%Y-%m-%d %H:%M"))
-tabs = st.tabs(["📊 我的持仓", "📈 净值/AUM", "🎯 操作建议", "💾 存储驾驶舱", "🔩 MLCC驾驶舱",
-                "📰 研报情报", "🔮 前瞻信号", "📡 赛道机会雷达", "💡 AI估值+拥挤", "🔬 AI芯片材料",
-                "🚀 太空经济", "🌐 全球选股"])
+tabs = st.tabs(["📊 我的持仓", "📈 净值/AUM", "🎯 操作建议", "🔬 芯片战情室", "💾 存储驾驶舱",
+                "🔩 MLCC驾驶舱", "📡 赛道机会雷达", "📰 研报情报", "🔮 前瞻信号", "💡 AI估值+拥挤",
+                "🧪 AI芯片材料", "🚀 太空经济", "🌐 全球选股"])
 with tabs[0]:
     page_portfolio()
 with tabs[1]:
@@ -904,21 +933,23 @@ with tabs[1]:
 with tabs[2]:
     page_actions()
 with tabs[3]:
-    page_storage()
+    page_chips()
 with tabs[4]:
-    page_mlcc()
+    page_storage()
 with tabs[5]:
-    page_research()
+    page_mlcc()
 with tabs[6]:
-    page_forward()
-with tabs[7]:
     page_radar()
+with tabs[7]:
+    page_research()
 with tabs[8]:
-    page_aimap()
+    page_forward()
 with tabs[9]:
-    page_themes()
+    page_aimap()
 with tabs[10]:
-    page_space()
+    page_themes()
 with tabs[11]:
+    page_space()
+with tabs[12]:
     page_pick()
 st.caption("Alpha Desk · 墨绿金主题 build 2026.07.04c · 数据来自公开行情接口，仅供研究，非投资建议。")
