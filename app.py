@@ -308,8 +308,7 @@ def page_portfolio():
     st.dataframe(show, use_container_width=True, height=520,
                  column_config={"今日%": st.column_config.NumberColumn(format="%.2f%%"),
                                 "盈亏%": st.column_config.NumberColumn(format="%.1f%%")})
-    st.caption("💡 想看买入以来的总盈亏？在 stockapp/holdings.csv 的 cost 列填上成本价即可。"
-               " USO 暂无数据源（油气ETF），显示为空。")
+    st.caption("💡 想看买入以来的总盈亏？在 stockapp/holdings.csv 的 cost 列填上成本价即可。")
 
 
 # ============================================================================
@@ -477,7 +476,7 @@ def page_nav():
     tab1.line_chart(df["AUM($)"])
     tab2.line_chart(df["净值"])
     if skipped:
-        st.caption(f"⚠️ 无历史数据、未计入的:{', '.join(skipped)}(如OTC的SIEGY、无源的USO)。"
+        st.caption(f"⚠️ 无历史数据、未计入的:{', '.join(skipped)}(如OTC的SIEGY)。"
                    "汇率为固定近似,曲线形状为主、绝对值仅供参考。")
 
 
