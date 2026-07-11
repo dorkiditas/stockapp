@@ -124,6 +124,14 @@ def _update_pages(url):
 def main():
     app_up = ensure_app()
     url, changed = ensure_tunnel() if app_up else ("", False)
+    # 自愈:入口页指向与实际隧道分叉时(如有人手动开过隧道),即使本轮没轮换也纠正
+    if url and not changed:
+        try:
+            html = open(os.path.join(BASE, "docs", "index.html"), encoding="utf-8").read()
+            if url not in html:
+                changed = True
+        except Exception:
+            pass
     if changed:
         _update_pages(url)
         lan = _lan_ip() or "10.0.66.237"
