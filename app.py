@@ -24,6 +24,7 @@ import storage
 import mlcc
 import radar
 import chips
+import daily
 import theme
 
 _ICON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon.png")
@@ -474,12 +475,45 @@ def page_actions():
     if os.path.exists(HOLDINGS_CSV):
         hold = pd.read_csv(HOLDINGS_CSV, dtype={"ticker": str})["ticker"].tolist()
     buys = list(MY_BUYS.keys())
-    allc = list(dict.fromkeys(hold + buys))
+    day_acts = daily.open_actions(os.path.join(BASE_DIR, "calls_log.csv"))
+    day_codes = [a["ticker"] for a in day_acts]
+    allc = list(dict.fromkeys(hold + buys + day_codes))
     with st.spinner("拉取最新价+前瞻信号…"):
         q = quote(tuple(allc))
         us = [c for c in allc if str(c).isalpha()]
         fwd = forward_many(tuple(us)) if us else {}
     qmap = {r["code"]: r for _, r in q.iterrows()}
+
+    # ── 📅 今日待执行(源:calls_log.csv,我每班更新)────────────────
+    st.markdown("#### 📅 今日待执行操作")
+    if not day_acts:
+        st.success("当前无未了结的待执行操作 — 所有 call 都已执行或了结。")
+    else:
+        drows = []
+        for a in day_acts:
+            r = qmap.get(tencent.to_symbol(a["ticker"]), {})
+            cur = r.get("price")
+            pnl = daily.delay_pnl_pct(a["side"], a["price0"], cur)
+            drows.append({
+                "建议日": a["date"], "动作": a["side_label"],
+                "标的": r.get("name") or a["ticker"], "代码": a["ticker"],
+                "建议价": a["price0"], "现价": cur,
+                "拖延盈亏%": pnl, "状态": a["status"], "理由": a["thesis"],
+            })
+        ddf = pd.DataFrame(drows)[["建议日", "动作", "标的", "代码", "建议价",
+                                   "现价", "拖延盈亏%", "状态", "理由"]]
+        st.dataframe(ddf, use_container_width=True, hide_index=True,
+                     column_config={
+                         "建议价": st.column_config.NumberColumn(format="%.2f"),
+                         "现价": st.column_config.NumberColumn(format="%.2f"),
+                         "拖延盈亏%": st.column_config.NumberColumn(
+                             format="%+.1f%%",
+                             help="正=拖到现在择时上偶然占便宜;负=拖延吃了亏。"
+                                  "注意:占便宜≠别做——逻辑没变就仍该执行"),
+                         "理由": st.column_config.TextColumn(width="large"),
+                     })
+        st.caption(f"共 {len(day_acts)} 条未了结操作。卖/平在前(该立刻了结),买/建其次。"
+                   "『拖延盈亏』只讲择时运气,不改基本面判断 — 逻辑没变就执行。")
 
     def build(code, action, reason):
         r = qmap.get(tencent.to_symbol(code), {})
@@ -501,8 +535,8 @@ def page_actions():
     brows = [build(c, *MY_BUYS[c]) for c in buys]
     _action_table(brows)
 
-    st.info("**最该立刻做的两件:① 建 MU 仓(存储,全链最佳风险收益) ② 平掉 BE 空单(在逆势流血)。** "
-            "其次:CRDO减一部分换CIEN、QCOM大减腾钱。")
+    st.info("**今天该立刻做什么 → 看顶部『📅 今日待执行操作』**(数据驱动、每班更新)。"
+            "下面这张是结构评级(加/留/减/砍/平的长期判断),两张配合看:先执行今日待办,再对照评级审视全仓。")
     st.caption("⚠️ 这是我的判断,不是保证。存储是周期股,赌AI拉长周期到2027不见顶——逻辑有数据支撑,"
                "但超大厂capex急刹车则回撤快,故『加仓』非all-in。前瞻数据(增速/上修)仅美股有。")
 
