@@ -82,6 +82,7 @@ body{background:var(--bg);color:var(--ink);margin:0;
   display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(18,45,33,.18)}
 .rmark.hotdot .n{border-color:var(--hot);color:var(--hot)}
 .rmark.warmdot .n{border-color:var(--warm);color:var(--goldink)}
+.rmark.washdot .n{border-style:dashed;border-color:var(--warm);color:var(--goldink)}
 .rmark .t{font-size:.62rem;color:var(--muted);white-space:nowrap}
 .rmark.row2{top:38px}
 .rail-ends{display:flex;justify-content:space-between;font-size:.7rem;font-weight:700;margin-top:40px}
@@ -184,7 +185,7 @@ body.mode-mine .nchip.hold{opacity:1;box-shadow:0 0 0 1px var(--brand2)}
     <div class="rail"></div>
     <div class="rail-marks">
       <a class="rmark" style="left:16%" href="#s2"><span class="n">2</span><span class="t">设备</span></a>
-      <a class="rmark row2" style="left:22%" href="#s3"><span class="n">3</span><span class="t">存储/代工</span></a>
+      <a class="rmark washdot row2" style="left:52%" href="#s3"><span class="n">3</span><span class="t">存储·洗仓中</span></a>
       <a class="rmark" style="left:28%" href="#s7"><span class="n">7</span><span class="t">被动件</span></a>
       <a class="rmark warmdot row2" style="left:42%" href="#s8"><span class="n">8</span><span class="t">整机电源</span></a>
       <a class="rmark warmdot" style="left:50%" href="#s1"><span class="n">1</span><span class="t">上游材料</span></a>
@@ -197,7 +198,7 @@ body.mode-mine .nchip.hold{opacity:1;box-shadow:0 0 0 1px var(--brand2)}
     </div>
     <div class="rail-ends"><span class="l">◀ 空旷 · 没人站</span><span class="r">挤爆 · 抱团区 ▶</span></div>
   </div>
-  <div class="spec-take"><b>一眼论点:</b>光模块与中国AI模型在最右端抱团,韩存储与钽电容/超容被留在最左端——同一条景气,两种价格。</div>
+  <div class="spec-take"><b>一眼论点:</b>光模块与中国AI模型在最右端抱团;钽电容/超容/硅光代工是真空地;韩存储是特殊的第三类——<b>挤过、被洗(虚线标)</b>:赌的不是"人群会来",是"人群会回来"。回来快,但周期真转向时出口也小,所以出场线必须写死。</div>
 </div>
 
 <div class="filters" role="group" aria-label="过滤">
@@ -234,11 +235,11 @@ body.mode-mine .nchip.hold{opacity:1;box-shadow:0 0 0 1px var(--brand2)}
 
 <div class="groupband"><span class="gt">Midstream · 芯片</span><span class="gl"></span></div>
 
-<div class="seg reveal" id="s3" data-crowd="open" data-mine="1"><div class="seg-node">3</div><div class="card">
+<div class="seg reveal" id="s3" data-crowd="mix" data-mine="1"><div class="seg-node">3</div><div class="card">
   <div class="seg-head"><span class="seg-name">制造 · 代工与存储</span><span class="seg-what">先进制程代工 + DRAM / NAND / HBM 三寡头——把设计变成晶圆</span></div>
   <div class="seg-grid">
     <div class="kv"><div class="k">Market</div><div class="v"><span class="big">HBM $35B → $100B</span><div class="sub2">2025→2028 三年三倍;DRAM合约2Q环比+74%;台积电2026指引+39%;海力士OP利润率79%</div></div></div>
-    <div class="kv"><div class="k">Crowding</div><div class="gauge"><div class="gtrack"><div class="gfill open" style="width:40%"></div><div class="gticks"><i></i><i></i><i></i><i></i><i></i></div></div><div class="glabel"><span class="s open">2/5 被轮出=错杀区</span><span class="d">外资今年净卖韩股 ₩156万亿</span></div></div></div>
+    <div class="kv"><div class="k">Crowding</div><div class="gauge"><div class="gtrack"><div class="gfill warm" style="width:80%"></div><div class="gticks"><i></i><i></i><i></i><i></i><i></i></div></div><div class="glabel"><span class="s warm">4/5 叙事挤 · 资金流出中</span><span class="d">MU已7倍=累计拥挤;外资卖₩156万亿=边际卖压释放大半 → 洗仓区非空地</span></div></div></div>
     <div class="kv"><div class="k">Valuation</div><div class="v"><span class="val cheap">4.8-6x 前瞻</span><div class="sub2">E砍半仍仅9.6-12.5x</div></div></div>
   </div>
   <div class="names"><span class="nchip hold">● EWY · 一键三星+海力士 125股</span><span class="nchip hold">● EWT · 一键台积电</span><span class="nchip cand">○ SK海力士 · GS ₩3.5M +50%</span><span class="nchip cand">○ MU</span><span class="nchip cand">○ 三星</span><span class="nchip cand">○ TSM</span><span class="nchip cand">◇ TSEM 硅光代工 · $13亿合同+预付</span></div>
