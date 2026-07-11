@@ -27,6 +27,31 @@ def _ok(url, t=8):
         return False
 
 
+# Cloudflare anycast边缘IP:trycloudflare按SNI路由,任一边缘IP都可达任一隧道。
+# 用固定IP探活=完全绕开DNS(她的VPN DNS对新子域NXDOMAIN、连1.1.1.1都会flap)。
+_CF_EDGE_IPS = ("104.16.230.132", "104.16.231.132")
+
+
+def _tunnel_ok(url, t=12):
+    """判隧道死活,对DNS故障完全免疫:直连失败→固定边缘IP+SNI探活。
+    隧道真死时边缘返回530(Argo Tunnel error),不是200,不会误判。
+    防止"隧道活着但DNS没跟上"被误判成死→反复轮换刷微信。"""
+    if _ok(url + "/healthz", t=t):
+        return True
+    host = url.split("//", 1)[1].strip("/")
+    for ip in _CF_EDGE_IPS:
+        try:
+            out = subprocess.run(["curl", "-s", "-m", str(t), "-o", "NUL",
+                                  "-w", "%{http_code}", "--resolve",
+                                  "%s:443:%s" % (host, ip), url + "/healthz"],
+                                 capture_output=True, text=True, timeout=t + 18)
+            if out.stdout.strip() == "200":
+                return True
+        except Exception:
+            pass
+    return False
+
+
 def _lan_ip():
     try:
         import socket
@@ -70,7 +95,7 @@ def ensure_tunnel():
     old = ""
     if os.path.exists(URL_FILE):
         old = open(URL_FILE, encoding="utf-8").read().strip()
-    if old and _ok(old + "/healthz", t=12):
+    if old and _tunnel_ok(old, t=12):
         return old, False  # 还活着,没变
     # 重开隧道
     subprocess.run(["taskkill", "/IM", "cloudflared.exe", "/F"],
@@ -97,7 +122,7 @@ def ensure_tunnel():
         # 新trycloudflare域名DNS生效可能要1-2分钟,耐心等;
         # 即便等不到也照样发布——新链接迟早通,死链接永远死(2026-07-05修:上一版15秒就放弃导致固定网址挂死链)
         for _ in range(12):
-            if _ok(url + "/healthz", t=10):
+            if _tunnel_ok(url, t=10):
                 break
             time.sleep(5)
         open(URL_FILE, "w", encoding="utf-8").write(url)
