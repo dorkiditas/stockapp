@@ -54,10 +54,14 @@
   if (isWx) { document.getElementById("wxtip").style.display = "block"; }
   var standalone = window.navigator.standalone === true ||
                    (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+  // 图片探测:跨域也能分辨真实成败(no-cors fetch 读不到状态码,
+  // 会把"边缘530/隧道已废"误判成通 —— 2026-07-11 trycloudflare 抽风日的教训)
   var probe = new Promise(function(res, rej){
     var t = setTimeout(function(){ rej("timeout"); }, 5000);
-    fetch(TARGET + "/healthz", {mode: "no-cors"}).then(function(){ clearTimeout(t); res(); },
-                                                       function(e){ clearTimeout(t); rej(e); });
+    var img = new Image();
+    img.onload  = function(){ clearTimeout(t); res(); };
+    img.onerror = function(){ clearTimeout(t); rej("err"); };
+    img.src = TARGET + "/favicon.png?t=" + Date.now();
   });
   probe.then(function(){
     document.getElementById("status").textContent = "通道正常";
