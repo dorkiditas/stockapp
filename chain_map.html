@@ -1,0 +1,282 @@
+<title>AI 产业链地图 · Alpha Desk</title>
+<style>
+:root{
+  --bg:#F3F5EF; --card:#FBFCF8; --panel:#EAEEE4; --ink:#14201A; --muted:#5F6A62;
+  --line:#DDE3D8; --brand:#17513A; --brand2:#1E7A56; --gold:#B99150; --goldsoft:#E9DFC8;
+  --open:#1E7A56; --warm:#B98A2E; --hot:#BC4B3C;
+  --chipbg:#EFF3EC;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#111813; --card:#18211B; --panel:#141C16; --ink:#E8ECE6; --muted:#93A096;
+    --line:#27332B; --brand:#7FBF9E; --brand2:#5FAE87; --gold:#CBA96A; --goldsoft:#3A3222;
+    --open:#5FAE87; --warm:#D0A548; --hot:#D97A6C;
+    --chipbg:#1F2A22;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111813; --card:#18211B; --panel:#141C16; --ink:#E8ECE6; --muted:#93A096;
+  --line:#27332B; --brand:#7FBF9E; --brand2:#5FAE87; --gold:#CBA96A; --goldsoft:#3A3222;
+  --open:#5FAE87; --warm:#D0A548; --hot:#D97A6C;
+  --chipbg:#1F2A22;
+}
+:root[data-theme="light"]{
+  --bg:#F3F5EF; --card:#FBFCF8; --panel:#EAEEE4; --ink:#14201A; --muted:#5F6A62;
+  --line:#DDE3D8; --brand:#17513A; --brand2:#1E7A56; --gold:#B99150; --goldsoft:#E9DFC8;
+  --open:#1E7A56; --warm:#B98A2E; --hot:#BC4B3C;
+  --chipbg:#EFF3EC;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);margin:0;
+  font-family:-apple-system,'PingFang SC','Microsoft YaHei',Inter,sans-serif;
+  line-height:1.55; font-variant-numeric:tabular-nums;}
+.wrap{max-width:1060px;margin:0 auto;padding:20px 16px 64px}
+header{display:flex;align-items:center;gap:13px;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:6px}
+.mark{width:42px;height:42px;border-radius:11px;flex:none;
+  background:linear-gradient(135deg,#1E7A56,#0E3A29);display:flex;align-items:center;justify-content:center;
+  color:#F4F1E7;font-family:Georgia,serif;font-style:italic;font-size:24px;
+  box-shadow:0 6px 16px rgba(23,81,58,.25);border:1px solid rgba(194,164,106,.5)}
+h1{font-family:Georgia,'Newsreader',serif;font-weight:600;font-size:1.45rem;margin:0;letter-spacing:.01em;color:var(--brand);text-wrap:balance}
+.sub{font-size:.76rem;color:var(--muted);margin-top:3px}
+h2{font-family:Georgia,serif;font-weight:600;font-size:1.06rem;margin:26px 0 4px;color:var(--brand)}
+.note{font-size:.78rem;color:var(--muted);margin:0 0 12px}
+
+/* 论点条:拥挤光谱 */
+.spectrum{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:16px}
+.spec-title{font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.spec-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
+.spec-label{font-size:.78rem;font-weight:700;width:86px;flex:none}
+.spec-label.open{color:var(--open)} .spec-label.warm{color:var(--warm)} .spec-label.hot{color:var(--hot)}
+.tagchip{font-size:.74rem;background:var(--chipbg);border:1px solid var(--line);border-radius:999px;padding:2px 10px;white-space:nowrap}
+
+/* 过滤 */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 4px}
+.fbtn{font-size:.8rem;border:1px solid var(--line);background:var(--card);color:var(--ink);
+  border-radius:999px;padding:6px 14px;cursor:pointer}
+.fbtn[aria-pressed="true"]{background:var(--brand);color:#F4F1E7;border-color:var(--brand)}
+.fbtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* 链谱 */
+.chain{position:relative;margin-top:14px}
+.chain::before{content:"";position:absolute;left:15px;top:8px;bottom:8px;width:2px;
+  background:linear-gradient(var(--brand2),var(--gold));opacity:.45}
+.seg{position:relative;padding-left:44px;margin:0 0 14px}
+.seg-node{position:absolute;left:4px;top:14px;width:24px;height:24px;border-radius:50%;
+  background:var(--card);border:2px solid var(--brand2);color:var(--brand);
+  font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;
+  transition:transform .15s ease, box-shadow .15s ease}
+.card:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(20,32,26,.10)}
+@media (prefers-reduced-motion: reduce){.card{transition:none}.card:hover{transform:none}}
+.seg-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.seg-name{font-family:Georgia,serif;font-weight:600;font-size:1.02rem;color:var(--ink)}
+.seg-what{font-size:.78rem;color:var(--muted)}
+.seg-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin-top:10px}
+@media(min-width:760px){.seg-grid{grid-template-columns:1.25fr 1fr 1fr}}
+.kv .k{font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.kv .v{font-size:.86rem;font-weight:600;margin-top:2px}
+.kv .v .big{font-size:1.02rem;color:var(--brand)}
+/* 拥挤表 */
+.meter{display:flex;align-items:center;gap:6px;margin-top:3px}
+.dots{display:flex;gap:3px}
+.dot{width:10px;height:10px;border-radius:3px;background:var(--panel);border:1px solid var(--line)}
+.dot.on1{background:var(--open);border-color:var(--open)}
+.dot.on2{background:var(--warm);border-color:var(--warm)}
+.dot.on3{background:var(--hot);border-color:var(--hot)}
+.mlabel{font-size:.76rem;font-weight:700}
+.mlabel.open{color:var(--open)} .mlabel.warm{color:var(--warm)} .mlabel.hot{color:var(--hot)}
+/* 估值签 */
+.val{display:inline-block;font-size:.74rem;font-weight:700;border-radius:6px;padding:2px 8px;border:1px solid}
+.val.cheap{color:var(--open);border-color:var(--open);background:transparent}
+.val.fair{color:var(--muted);border-color:var(--line)}
+.val.rich{color:var(--warm);border-color:var(--warm)}
+.val.mad{color:var(--hot);border-color:var(--hot)}
+/* 标的行 */
+.names{margin-top:10px;padding-top:9px;border-top:1px dashed var(--line);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.nchip{font-size:.75rem;border-radius:999px;padding:2px 10px;border:1px solid var(--line);background:var(--chipbg);white-space:nowrap}
+.nchip.hold{border-color:var(--brand2);color:var(--brand);font-weight:700}
+.nchip.cand{border-color:var(--gold);color:var(--gold);font-weight:600}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.75rem;color:var(--muted);margin:10px 0 2px}
+.legend b{color:var(--ink)}
+footer{margin-top:28px;border-top:1px solid var(--line);padding-top:12px;font-size:.72rem;color:var(--muted)}
+.hidden{display:none}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="mark">&#945;</div>
+  <div>
+    <h1>AI 全球产业链地图</h1>
+    <div class="sub">环节 · 空间 · 拥挤度 · 估值 · 你的位置 &nbsp;|&nbsp; as-of 2026-07-12 · Max 深读141份研报+5模型手绘</div>
+  </div>
+</header>
+
+<div class="spectrum">
+  <div class="spec-title">一眼论点 · 钱都挤在哪,空地在哪</div>
+  <div class="spec-row"><span class="spec-label hot">🔴 挤爆</span>
+    <span class="tagchip">光模块(旭创82x·三类资金全满)</span><span class="tagchip">A股题材(晶合194x/永鼎698x)</span><span class="tagchip">中国AI模型(~125x ARR)</span><span class="tagchip">日MLCC(80-238x)</span></div>
+  <div class="spec-row"><span class="spec-label warm">🟡 转热</span>
+    <span class="tagchip">算力核心(NVDA/AVGO,挤但盈利硬)</span><span class="tagchip">A股设备链(7/16点火日会挤)</span><span class="tagchip">AI电力大盘股(GEV)</span></div>
+  <div class="spec-row"><span class="spec-label open">🟢 空旷</span>
+    <span class="tagchip">韩存储(被轮出=错杀区)</span><span class="tagchip">钽电容·超级电容</span><span class="tagchip">硅光代工(TSEM)</span><span class="tagchip">液冷快接头UQD</span><span class="tagchip">HDD玻璃</span><span class="tagchip">E-Chuck·探针卡·键合机</span></div>
+</div>
+
+<div class="filters" role="group" aria-label="过滤">
+  <button class="fbtn" aria-pressed="true"  data-f="all">全部环节</button>
+  <button class="fbtn" aria-pressed="false" data-f="open">只看空旷(机会)</button>
+  <button class="fbtn" aria-pressed="false" data-f="mine">只看我的仓</button>
+</div>
+<div class="legend"><span><b>●</b> 持仓</span><span><b>○</b> 候选</span><span><b>◇</b> 新挖/雷达</span><span>拥挤度:1-2🟢空旷 · 3🟡转热 · 4-5🔴挤爆</span></div>
+
+<div class="chain">
+
+<!-- 1 上游材料 -->
+<div class="seg" data-crowd="mix" data-mine="1"><div class="seg-node">1</div><div class="card">
+  <div class="seg-head"><span class="seg-name">上游材料 · 小金属</span><span class="seg-what">锗/钽/钪/硅片/CMP硅料/电子布——芯片的"米面粮油",卡脖子最物理的一层</span></div>
+  <div class="seg-grid">
+    <div class="kv"><div class="k">市场空间</div><div class="v">半导体材料 <span class="big">$732亿→$1400-1500亿</span>(2025→2030,翻倍);锗价创历史新高、钽矿YTD+140%(已过顶)</div></div>
+    <div class="kv"><div class="k">拥挤度</div><div class="meter"><div class="dots"><span class="dot on2"></span><span class="dot on2"></span><span class="dot on2"></span><span class="dot"></span><span class="dot"></span></div><span class="mlabel warm">3/5 分裂</span></div><div class="sub">A股题材段挤(锗业PB45)·海外硅片/耗材没人</div></div>
+    <div class="kv"><div class="k">估值</div><div class="v"><span class="val mad">A股疯</span> <span class="val fair">日股合理</span></div></div>
+  </div>
+  <div class="names"><span class="nchip hold">● 云南锗业(题材仓·别补)</span><span class="nchip cand">◇ 信越/SUMCO(GS:2H26下一紧)</span><span class="nchip">◇ Fuso CMP硅料</span><span class="nchip">◇ 东方钽业(Bobby:别追)</span></div>
+</div></div>
+
+<!-- 2 设备 -->
+<div class="seg" data-crowd="open" data-mine="1"><div class="seg-node">2</div><div class="card">
+  <div class="seg-head"><span class="seg-name">半导体设备</span><span class="seg-what">光刻/刻蚀/沉积/键合/切割/测试——扩产周期里最先收到订单的一层</span></div>
+  <div class="seg-grid">
+    <div class="kv"><div class="k">市场空间</div><div class="v">CXMT一家2026设备采购 <span class="big">$56-60亿</span>;BESI混合键合订单同比翻倍、客户扩到20家;HBM键合/切割强度随层数递增</div></div>
+    <div class="kv"><div class="k">拥挤度</div><div class="meter"><div class="dots"><span class="dot on1"></span><span class="dot on1"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div><span class="mlabel open">2/5 细分空旷</span></div><div class="sub">明星(ASML/AMAT)有人·键合/切割/探针卡没人;A股设备7/16当天会挤</div></div>
+    <div class="kv"><div class="k">估值</div><div class="v"><span class="val rich">BESI 54x</span> <span class="val fair">ASML +12%空间</span></div></div>
+  </div>
+  <div class="names"><span class="nchip cand">○ BESI(订单已验证·7/23print)</span><span class="nchip cand">○ ASML</span><span class="nchip cand">○ 爱德万</span><span class="nchip">◇ Disco切磨垄断</span><span class="nchip">◇ Hanmi键合机</span><span class="nchip">◇ Camtek/FORM检测探针</span></div>
+</div></div>
+
+<!-- 3 制造 -->
+<div class="seg" data-crowd="open" data-mine="1"><div class="seg-node">3</div><div class="card">
+  <div class="seg-head"><span class="seg-name">制造 · 代工/存储</span><span class="seg-what">把设计变成晶圆:先进制程代工 + DRAM/NAND/HBM 三寡头</span></div>
+  <div class="seg-grid">
+    <div class="kv"><div class="k">市场空间</div><div class="v">HBM <span class="big">$35B→58B→100B</span>(25→28,3年3倍);DRAM合约2Q环比+74%;台积电2026营收指引+39%;海力士OP利润率79%</div></div>
+    <div class="kv"><div class="k">拥挤度</div><div class="meter"><div class="dots"><span class="dot on1"></span><span class="dot on1"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div><span class="mlabel open">2/5 被轮出=错杀区</span></div><div class="sub">外资今年净卖韩股₩156万亿·三星外资持股2015来最低</div></div>
+    <div class="kv"><div class="k">估值</div><div class="v"><span class="val cheap">4.8-6x前瞻</span><div class="sub">E砍半后仍仅9.6-12.5x=真安全边际</div></div></div>
+  </div>
+  <div class="names"><span class="nchip cand">○ SK海力士(GS ₩3.5M/+50%)</span><span class="nchip cand">○ MU</span><span class="nchip cand">○ 三星</span><span class="nchip cand">○ TSM</span><span class="nchip cand">◇ TSEM硅光代工($13亿合同+预付)</span></div>
+</div></div>
+
+<!-- 4 设计 -->
+<div class="seg" data-crowd="warm" data-mine="1"><div class="seg-node">4</div><div class="card">
+  <div class="seg-head"><span class="seg-name">芯片设计</span><span class="seg-what">GPU/定制硅ASIC/内存接口/SSD主控——利润率最高的一层</span></div>
+  <div class="seg-grid">
+    <div class="kv"><div class="k">市场空间</div><div class="v">AVGO FY27 AI收入 <span class="big">&gt;$1000亿</span>(6大定制硅客户);内存接口芯片$20B@2030(3倍上修);全球仅5家at-scale LLM=真需求</div></div>
+    <div class="kv"><div class="k">拥挤度</div><div class="meter"><div class="dots"><span class="dot on2"></span><span class="dot on2"></span><span class="dot on2"></span><span class="dot on2"></span><span class="dot"></span></div><span class="mlabel warm">4/5 挤但盈利硬</span></div><div class="sub">97%买入评级=共识;capex仍被上修撑着</div></div>
+    <div class="kv"><div class="k">估值</div><div class="v"><span class="val fair">AVGO ~30x</span> <span class="val rich">澜起128x</span></div></div>
+  </div>
+  <div class="names"><span class="nchip hold">● AVGO(核心)</span><span class="nchip hold">● CRDO</span><span class="nchip hold">● CBRS</span><span class="nchip hold">● QCOM(减持中)</span><span class="nchip cand">○ SIMO主控</span><span class="nchip cand">○ 澜起(等回调)</span></div>
+</div></div>
+
+<!-- 5 封装 -->
+<div class="seg" data-crowd="warm" data-mine="1"><div class="seg-node">5</div><div class="card">
+  <div class="seg-head"><span class="seg-name">先进封装 · 载板</span><span class="seg-what">CoWoS/HBM堆叠/ABF载板/玻璃基板——芯片"缝"在一起的地方,产能全球紧</span></div>
+  <div class="seg-grid">
+    <div class="kv"><div class="k">市场空间</div><div class="v">AI PCB <span class="big">$56亿→$255亿</span>(25→27);高端CCL价值量26/27年+142%/+222%;ABF紧数年;国内封装产能仅海外1/10</div></div>
+    <div class="kv"><div class="k">拥挤度</div><div class="meter"><div class="dots"><span class="dot on2"></span><span class="dot on2"></span><span class="dot on2"></span><span class="dot"></span><span class="dot"></span></div><span class="mlabel warm">3/5 分层</span></div><div class="sub">Ibiden已price满·台湾载板三兄弟便宜一半没人提</div></div>
+    <div class="kv"><div class="k">估值</div><div class="v"><span class="val rich">Ibiden 40x</span> <span class="val cheap">台ABF便宜</span></div></div>
+  </div>
+  <div class="names"><span class="nchip hold">● 长电科技</span><span class="nchip cand">○ 生益科技CCL</span><span class="nchip">◇ 欣兴/景硕/南电(相对价值)</span><span class="nchip">◇ SEMCO(MLCC+ABF三引擎)</span><span class="nchip">◇ HOYA/水晶(HDD玻璃)</span></div>
+</div></div>
+
+<!-- 6 互连 -->
+<div class="seg" data-crowd="hot" data-mine="1"><div class="seg-node">6</div><div class="card">
+  <div class="seg-head"><span class="seg-name">互连 · 光/铜</span><span class="seg-what">光模块/CPO/AEC电缆/光纤——GPU之间的"神经",带宽军备竞赛</span></div>
+  <div class="seg-grid">
+    <div class="kv"><div class="k">市场空间</div><div class="v">光互连 <span class="big">$92B@2028</span>(3年CAGR 65%);硅光渗透29%→60%;1.6T出货215% CAGR;光纤现货自2024低点+400%</div></div>
+    <div class="kv"><div class="k">拥挤度</div><div class="meter"><div class="dots"><span class="dot on3"></span><span class="dot on3"></span><span class="dot on3"></span><span class="dot on3"></span><span class="dot on3"></span></div><span class="mlabel hot">5/5 全场最挤</span></div><div class="sub">旭创82x·融资/北上/基金三类钱全满(聪明资金框架)</div></div>
+    <div class="kv"><div class="k">估值</div><div class="v"><span class="val mad">模块厂疯</span> <span class="val cheap">光纤/代工层便宜</span></div></div>
+  </div>
+  <div class="names"><span class="nchip hold">● CRDO(AEC)</span><span class="nchip hold">● 中天科技(光纤·拿住)</span><span class="nchip cand">○ CIEN</span><span class="nchip cand">◇ TSEM(买铲不买模块)</span><span class="nchip">◇ 住友电工(InP+光纤,23x)</span></div>
+</div></div>
+
+<!-- 7 被动件 -->
+<div class="seg" data-crowd="open" data-mine="0"><div class="seg-node">7</div><div class="card">
+  <div class="seg-head"><span class="seg-name">被动件 · 供电小件</span><span class="seg-what">MLCC/钽电容/超级电容/DrMOS——每颗GPU身边的"毛细血管",小而寡头</span></div>
+  <div class="seg-grid">
+    <div class="kv"><div class="k">市场空间</div><div class="v">钽电容2027 AI需求占市场<span class="big">50%、缺口50%</span>;AI-MLCC单价33倍/订单排到2029;超容全球产能仅650万颗;单GPU DrMOS ~$80</div></div>
+    <div class="kv"><div class="k">拥挤度</div><div class="meter"><div class="dots"><span class="dot on1"></span><span class="dot on1"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div><span class="mlabel open">2/5 钽/超容没人</span></div><div class="sub">日MLCC龙头贵到没法买=拥挤在价格里</div></div>
+    <div class="kv"><div class="k">估值</div><div class="v"><span class="val mad">日MLCC 80-238x</span> <span class="val fair">顺络45x</span></div></div>
+  </div>
+  <div class="names"><span class="nchip cand">○ 顺络电子(A股备胎)</span><span class="nchip cand">○ 村田(质量首选)</span><span class="nchip">◇ 江海超容</span><span class="nchip">◇ LEENO测试socket</span></div>
+</div></div>
+
+<!-- 8 整机电源 -->
+<div class="seg" data-crowd="open" data-mine="0"><div class="seg-node">8</div><div class="card">
+  <div class="seg-head"><span class="seg-name">服务器 · 电源/散热</span><span class="seg-what">整机组装/PSU·BBU/液冷冷板·CDU·快接头——机柜功率200kW+逼出来的新需求</span></div>
+  <div class="seg-grid">
+    <div class="kv"><div class="k">市场空间</div><div class="v">松下BBU全球<span class="big">80%份额</span>·AI利润占比27%→47%;单柜液冷价值$7-8万(+CDU $15万);快接头UQD壁垒被低估</div></div>
+    <div class="kv"><div class="k">拥挤度</div><div class="meter"><div class="dots"><span class="dot on1"></span><span class="dot on1"></span><span class="dot on2"></span><span class="dot"></span><span class="dot"></span></div><span class="mlabel warm">3/5 冷板挤·快接头空</span></div><div class="sub">Simon判定:液冷真α在UQD不在冷板(走量被杀价)</div></div>
+    <div class="kv"><div class="k">估值</div><div class="v"><span class="val cheap">松下22x</span> <span class="val fair">台达合理</span></div></div>
+  </div>
+  <div class="names"><span class="nchip cand">○ 松下HD(BBU)</span><span class="nchip">◇ 鼎通(UQD·Simon)</span><span class="nchip">◇ 台达(CBU超容边柜)</span><span class="nchip">◇ Simplo BBU组装</span></div>
+</div></div>
+
+<!-- 9 电力 -->
+<div class="seg" data-crowd="warm" data-mine="1"><div class="seg-node">9</div><div class="card">
+  <div class="seg-head"><span class="seg-name">电力 · 基建</span><span class="seg-what">燃机/变压器/开关柜/柴发/SOFC/机电施工——AI最硬的物理瓶颈:电</span></div>
+  <div class="seg-grid">
+    <div class="kv"><div class="k">市场空间</div><div class="v">DC电力需求2030 <span class="big">+220%</span>(=全球第6大用电国);变压器交期3-5年;美国缺2万电工(FOMC纪要原话);GS新主题:800V直流/SST</div></div>
+    <div class="kv"><div class="k">拥挤度</div><div class="meter"><div class="dots"><span class="dot on2"></span><span class="dot on2"></span><span class="dot on2"></span><span class="dot"></span><span class="dot"></span></div><span class="mlabel warm">3/5 大盘热·小盘空</span></div><div class="sub">GEV共识化但订单sold out到2028;FIX/POWL没人细看</div></div>
+    <div class="kv"><div class="k">估值</div><div class="v"><span class="val rich">GEV 60x</span> <span class="val fair">潍柴已+60%等回调</span></div></div>
+  </div>
+  <div class="names"><span class="nchip hold">● GEV</span><span class="nchip hold">● SIEGY</span><span class="nchip cand">○ 潍柴2338(等回调)</span><span class="nchip">◇ FIX机电总包</span><span class="nchip">◇ POWL开关柜</span><span class="nchip">◇ 富士电机SST</span></div>
+</div></div>
+
+<!-- 10 云/DC -->
+<div class="seg" data-crowd="warm" data-mine="0"><div class="seg-node">10</div><div class="card">
+  <div class="seg-head"><span class="seg-name">数据中心 · 云</span><span class="seg-what">hyperscaler/新云NeoCloud/IDC——所有上游需求的总闸门</span></div>
+  <div class="seg-grid">
+    <div class="kv"><div class="k">市场空间</div><div class="v">Hyperscaler capex 2026E <span class="big">$490B(+24%)</span>·2029累计$2.8T;算力租金$300亿/年/GW=1.5年回本(稀缺铁证);三大实验室锚定~65GW建设</div></div>
+    <div class="kv"><div class="k">拥挤度</div><div class="meter"><div class="dots"><span class="dot on2"></span><span class="dot on2"></span><span class="dot on2"></span><span class="dot on2"></span><span class="dot"></span></div><span class="mlabel warm">4/5 共识主线</span></div><div class="sub">但capex仍被持续上修=共识还没定价完</div></div>
+    <div class="kv"><div class="k">估值</div><div class="v"><span class="val fair">Mag7合理</span> <span class="val rich">NeoCloud波动大</span></div></div>
+  </div>
+  <div class="names"><span class="nchip">(你的敞口=整本书间接)</span><span class="nchip">Meta出租算力≠过剩(7/12拆解)</span></div>
+</div></div>
+
+<!-- 11 模型应用 -->
+<div class="seg" data-crowd="hot" data-mine="1"><div class="seg-node">11</div><div class="card">
+  <div class="seg-head"><span class="seg-name">模型 · 应用</span><span class="seg-what">大模型/Agent/AI软件/网安——需求的源头,也是估值最玄的一层</span></div>
+  <div class="seg-grid">
+    <div class="kv"><div class="k">市场空间</div><div class="v">Anthropic ARR <span class="big">$300亿→年底$1000亿目标</span>;Codex非开发者用户+137倍;软件业处"峰值恐惧"=应用逢低区</div></div>
+    <div class="kv"><div class="k">拥挤度</div><div class="meter"><div class="dots"><span class="dot on3"></span><span class="dot on3"></span><span class="dot on3"></span><span class="dot on3"></span><span class="dot"></span></div><span class="mlabel hot">4/5 中国AI模型挤爆</span></div><div class="sub">MiniMax 125x ARR=一级融资倍数的2-3倍;美股软件反而在恐惧底</div></div>
+    <div class="kv"><div class="k">估值</div><div class="v"><span class="val mad">中国AI模型疯</span> <span class="val fair">美软件14x PEG 0.8</span></div></div>
+  </div>
+  <div class="names"><span class="nchip hold">● PLTR(UBS软件首选)</span><span class="nchip cand">○ CRWD(AI网安·小仓)</span></div>
+</div></div>
+
+</div><!-- /chain -->
+
+<h2>怎么用这张图</h2>
+<p class="note">顺着链从上往下,钱在"🔴挤爆"环节抱团(光模块/A股题材/中国AI模型),而同一条景气的"🟢空旷"表达往往就在隔壁一格——买铲子(TSEM vs 模块厂)、买上游(钽电容 vs MLCC)、买错杀(韩存储 vs 中国AI)。这是全书的方法论:<b>同一个景气,永远买没人站的那一格。</b></p>
+
+<footer>
+  数据源:GS/UBS/MS/Citi/Bernstein 原报告逐字读 + 腾讯实时(A股) + SEC文件(TSEM) + FOMC纪要原文 + 知识星球(打折用)。拥挤度=聪明资金框架+外资持仓+估值分位的综合判定,主观打分,as-of 2026-07-12。仅供你决策参考,Max 手绘。
+</footer>
+</div>
+
+<script>
+(function(){
+  var btns=document.querySelectorAll('.fbtn');
+  var segs=document.querySelectorAll('.seg');
+  btns.forEach(function(b){
+    b.addEventListener('click',function(){
+      btns.forEach(function(x){x.setAttribute('aria-pressed','false');});
+      b.setAttribute('aria-pressed','true');
+      var f=b.getAttribute('data-f');
+      segs.forEach(function(s){
+        var crowd=s.getAttribute('data-crowd');
+        var mine=s.getAttribute('data-mine')==='1';
+        var show = f==='all' || (f==='open' && (crowd==='open'||crowd==='mix')) || (f==='mine' && mine);
+        s.classList.toggle('hidden',!show);
+      });
+    });
+  });
+})();
+</script>

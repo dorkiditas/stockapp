@@ -1005,7 +1005,7 @@ def _fmt(df, with_market=False):
 
 # ============================================================================
 theme.header(meta_right=dt.datetime.now().strftime("%Y-%m-%d %H:%M"))
-tabs = st.tabs(["📊 我的持仓", "📈 净值/AUM", "🎯 操作建议", "🔬 芯片战情室", "💾 存储驾驶舱",
+tabs = st.tabs(["📊 我的持仓", "📈 净值/AUM", "🎯 操作建议", "🗺️ 产业链地图", "🔬 芯片战情室", "💾 存储驾驶舱",
                 "🔩 MLCC驾驶舱", "📡 赛道机会雷达", "📰 研报情报", "🔮 前瞻信号", "💡 AI估值+拥挤",
                 "🧪 AI芯片材料", "🚀 太空经济", "🌐 全球选股"])
 with tabs[0]:
@@ -1015,23 +1015,31 @@ with tabs[1]:
 with tabs[2]:
     page_actions()
 with tabs[3]:
-    page_chips()
+    # 产业链地图:11环节链谱(做什么/空间/拥挤/估值/持仓位置),Max手绘HTML
+    _map_path = os.path.join(BASE_DIR, "chain_map.html")
+    if os.path.exists(_map_path):
+        import streamlit.components.v1 as _components
+        _components.html(open(_map_path, encoding="utf-8").read(), height=3400, scrolling=True)
+    else:
+        st.info("chain_map.html 缺失,让 Max 重新生成。")
 with tabs[4]:
-    page_storage()
+    page_chips()
 with tabs[5]:
-    page_mlcc()
+    page_storage()
 with tabs[6]:
-    page_radar()
+    page_mlcc()
 with tabs[7]:
-    page_research()
+    page_radar()
 with tabs[8]:
-    page_forward()
+    page_research()
 with tabs[9]:
-    page_aimap()
+    page_forward()
 with tabs[10]:
-    page_themes()
+    page_aimap()
 with tabs[11]:
-    page_space()
+    page_themes()
 with tabs[12]:
+    page_space()
+with tabs[13]:
     page_pick()
 st.caption("Alpha Desk · 墨绿金主题 build 2026.07.04c · 数据来自公开行情接口，仅供研究，非投资建议。")
