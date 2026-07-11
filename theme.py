@@ -129,15 +129,25 @@ def inject_appicon():
         b64 = base64.b64encode(open(p, "rb").read()).decode()
     except Exception:
         return
+    # 常驻哨兵:Streamlit每次rerun会把favicon换成它的红色"运行中"标,
+    # 一次性注入会被顶掉(=她看到红logo)。改为每秒自检,被顶就抢回α。
     _html(
         "<script>(function(){try{"
-        "var h=window.parent.document.head;"
+        "var W=window.parent, D=W.document;"
         "var u='data:image/png;base64," + b64 + "';"
-        "h.querySelectorAll(\"link[rel~='icon'],link[rel^='apple-touch-icon']\")"
-        ".forEach(function(e){e.remove();});"
-        "[180,152,167,120].forEach(function(s){var l=window.parent.document.createElement('link');"
-        "l.rel='apple-touch-icon';l.setAttribute('sizes',s+'x'+s);l.href=u;h.appendChild(l);});"
-        "var f=window.parent.document.createElement('link');f.rel='icon';f.type='image/png';f.href=u;h.appendChild(f);"
+        "function assert_(){try{"
+        "var ok=false;"
+        "D.head.querySelectorAll(\"link[rel~='icon']\").forEach(function(e){"
+        "  if(e.href===u){ok=true;}else{e.remove();}});"
+        "D.head.querySelectorAll(\"link[rel^='apple-touch-icon']\").forEach(function(e){"
+        "  if(e.href!==u){e.remove();}});"
+        "if(!D.head.querySelector(\"link[rel^='apple-touch-icon']\")){"
+        "  [180,152,167,120].forEach(function(s){var l=D.createElement('link');"
+        "  l.rel='apple-touch-icon';l.setAttribute('sizes',s+'x'+s);l.href=u;D.head.appendChild(l);});}"
+        "if(!ok){var f=D.createElement('link');f.rel='icon';f.type='image/png';f.href=u;D.head.appendChild(f);}"
+        "}catch(e){}}"
+        "assert_();"
+        "if(!W.__adIconGuard){W.__adIconGuard=W.setInterval(assert_,1000);}"
         "}catch(e){}})();</script>", height=0)
 
 
