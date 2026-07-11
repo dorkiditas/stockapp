@@ -157,6 +157,9 @@ body{background:var(--bg);color:var(--ink);margin:0;
 .thesis b{color:var(--goldline)}
 footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);font-size:.7rem;color:var(--muted);line-height:1.7}
 .hidden{display:none}
+body.mode-mine .nchip{opacity:.3}
+body.mode-mine .nchip.hold{opacity:1;box-shadow:0 0 0 1px var(--brand2)}
+#fhint{font-size:.74rem;color:var(--goldink);font-weight:700;margin-top:6px;min-height:1.2em}
 .reveal{opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s ease}
 .reveal.in{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
@@ -202,6 +205,7 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);font-si
   <button class="fbtn" aria-pressed="false" data-f="open">只看空旷 · 机会</button>
   <button class="fbtn" aria-pressed="false" data-f="mine">只看我的仓</button>
 </div>
+<div id="fhint"></div>
 <div class="legend"><span><b>●</b> 持仓</span><span><b>○</b> 候选</span><span><b>◇</b> 新挖/雷达</span></div>
 
 <div class="chain">
@@ -218,7 +222,7 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);font-si
   <div class="names"><span class="nchip hold">● 云南锗业 · 题材仓别补</span><span class="nchip cand">◇ 信越 / SUMCO · GS点名2H26下一紧</span><span class="nchip">◇ Fuso CMP硅料</span><span class="nchip">◇ 东方钽业 · Bobby判别追</span></div>
 </div></div>
 
-<div class="seg reveal" id="s2" data-crowd="open" data-mine="1" data-g="1"><div class="seg-node">2</div><div class="card">
+<div class="seg reveal" id="s2" data-crowd="open" data-mine="0" data-g="1"><div class="seg-node">2</div><div class="card">
   <div class="seg-head"><span class="seg-name">半导体设备</span><span class="seg-what">光刻 / 刻蚀 / 键合 / 切割 / 测试——扩产周期里最先拿到订单的一层</span></div>
   <div class="seg-grid">
     <div class="kv"><div class="k">Market</div><div class="v"><span class="big">CXMT 一家 $56-60亿</span><div class="sub2">2026设备采购;BESI混合键合订单同比翻倍、客户扩到20家;HBM层数越高键合/切割强度越大</div></div></div>
@@ -237,7 +241,7 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);font-si
     <div class="kv"><div class="k">Crowding</div><div class="gauge"><div class="gtrack"><div class="gfill open" style="width:40%"></div><div class="gticks"><i></i><i></i><i></i><i></i><i></i></div></div><div class="glabel"><span class="s open">2/5 被轮出=错杀区</span><span class="d">外资今年净卖韩股 ₩156万亿</span></div></div></div>
     <div class="kv"><div class="k">Valuation</div><div class="v"><span class="val cheap">4.8-6x 前瞻</span><div class="sub2">E砍半仍仅9.6-12.5x</div></div></div>
   </div>
-  <div class="names"><span class="nchip cand">○ SK海力士 · GS ₩3.5M +50%</span><span class="nchip cand">○ MU</span><span class="nchip cand">○ 三星</span><span class="nchip cand">○ TSM</span><span class="nchip cand">◇ TSEM 硅光代工 · $13亿合同+预付</span></div>
+  <div class="names"><span class="nchip hold">● EWY · 一键三星+海力士 125股</span><span class="nchip hold">● EWT · 一键台积电</span><span class="nchip cand">○ SK海力士 · GS ₩3.5M +50%</span><span class="nchip cand">○ MU</span><span class="nchip cand">○ 三星</span><span class="nchip cand">○ TSM</span><span class="nchip cand">◇ TSEM 硅光代工 · $13亿合同+预付</span></div>
 </div></div>
 
 <div class="seg reveal" id="s4" data-crowd="warm" data-mine="1"><div class="seg-node">4</div><div class="card">
@@ -348,13 +352,22 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);font-si
       btns.forEach(function(x){x.setAttribute('aria-pressed','false');});
       b.setAttribute('aria-pressed','true');
       var f=b.getAttribute('data-f');
+      var vis=0;
       segs.forEach(function(s){
         var crowd=s.getAttribute('data-crowd');
         var mine=s.getAttribute('data-mine')==='1';
         var show = f==='all' || (f==='open' && (crowd==='open'||crowd==='mix')) || (f==='mine' && mine);
         s.classList.toggle('hidden',!show);
+        if(show) vis++;
       });
       bands.forEach(function(g){g.classList.toggle('hidden', f!=='all');});
+      document.body.classList.toggle('mode-mine', f==='mine');
+      var h=document.getElementById('fhint');
+      if(h){
+        if(f==='mine') h.textContent='你的仓分布在 '+vis+'/11 个环节 — 非持仓标的已淡化,亮着的就是你的●';
+        else if(f==='open') h.textContent='只显示空旷环节 '+vis+'/11 — 机会藏在没人站的格子里';
+        else h.textContent='';
+      }
     });
   });
   // 滚动渐显
