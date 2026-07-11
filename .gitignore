@@ -15,3 +15,10 @@ feed/
 server_chan.json
 feed/
 tunnel_url.txt
+
+# 私有持仓数据(仅本地/app读取,永不进仓)
+holdings.csv
+calls_log.csv
+nav_snapshots.csv
+account_risk.json
+shift_briefs.md
