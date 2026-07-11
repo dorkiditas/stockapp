@@ -806,6 +806,12 @@ def page_storage():
     fd = pd.DataFrame([{"基本面": a, "现状": b, "含义": c} for a, b, c in storage.FUNDAMENTALS])
     st.dataframe(fd, use_container_width=True, hide_index=True)
 
+    st.markdown("#### 🌊 资金面 · 拥挤度(当前风险在这里,不在基本面)")
+    st.caption(f"as-of {storage.POSITIONING_ASOF} · 我的核心判断:韩股存储被资金轮出,是拥挤度flush、不是拐点。")
+    pz = pd.DataFrame([{"信号": a, "读数": b, "含义": c} for a, b, c in storage.POSITIONING])
+    st.dataframe(pz, use_container_width=True, hide_index=True)
+    st.warning(f"**诚实的反方票:** {storage.DISSENT}")
+
     st.markdown("#### 💹 标的实时估值")
     st.caption("前瞻PE 越低 = 市场越把它当'周期顶'给白菜价 = 认知差越大。美股实时;韩股无免费源,用研报参考值。")
     with st.spinner("拉实时估值(缓存30分钟)…"):
@@ -883,6 +889,9 @@ def page_mlcc():
         st.markdown("**⚠️ 见顶 / 风险 · 预警:**")
         for x in mlcc.WATCH_BEAR:
             st.markdown(f"- {x}")
+
+    with st.expander("💡 相邻主线:钽电容(被动件里最缺的一档)"):
+        st.markdown(mlcc.TANTALUM)
 
     st.caption("怎么做:先修保证金缓冲,再谈加仓;真要MLCC只做小卫星(≤5%)——质量选村田、A股选三环。"
                "别拿它挤掉存储:同样'AI缺货',存储6-8x、MLCC 80-238x,非对称性一目了然。")
