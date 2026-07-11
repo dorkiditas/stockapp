@@ -73,8 +73,29 @@ def _wechat(title, desp):
         pass
 
 
+def _pids_8501():
+    """列出所有监听8501的PID。双开=手机随机连到旧代码(logo/页面不一致的元凶)。"""
+    try:
+        out = subprocess.check_output(["netstat", "-ano"], text=True, errors="ignore")
+    except Exception:
+        return []
+    pids = set()
+    for ln in out.splitlines():
+        if ":8501" in ln and "LISTENING" in ln:
+            parts = ln.split()
+            if parts and parts[-1].isdigit():
+                pids.add(parts[-1])
+    return sorted(pids)
+
+
 def ensure_app():
-    if _ok("http://localhost:8501/healthz"):
+    pids = _pids_8501()
+    if len(pids) > 1:  # 双开:全杀,下面重启一个干净的
+        for p in pids:
+            subprocess.run(["taskkill", "/F", "/PID", p],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        time.sleep(2)
+    elif _ok("http://localhost:8501/healthz"):
         return True
     # 拉起 streamlit(无窗口)
     si = subprocess.STARTUPINFO()

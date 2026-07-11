@@ -25,6 +25,8 @@ import mlcc
 import radar
 import chips
 import daily
+import macro
+import findings
 import theme
 
 _ICON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon.png")
@@ -470,6 +472,18 @@ def page_actions():
                "核心打法:从挤爆的算力核心,换到便宜+预期上修+被低配的AI邻接(存储/CIEN)。")
     st_autorefresh(interval=120000, key="act_auto")
 
+    # ── 宏观仪表盘(五根柱子,每根接到决策;Max每班更新)──
+    st.markdown("#### 🌍 宏观仪表盘")
+    st.caption(f"as-of {macro.ASOF} · {macro.SRC}")
+    st.warning(f"**宏观判断:** {macro.VERDICT}")
+    mp = pd.DataFrame([{"柱子": a, "当前读数": b, "对你的决策": c} for a, b, c in macro.PILLARS])
+    st.dataframe(mp, use_container_width=True, hide_index=True,
+                 column_config={"当前读数": st.column_config.TextColumn(width="large"),
+                                "对你的决策": st.column_config.TextColumn(width="large")})
+    with st.expander("📅 7月宏观雷区日历(按杀伤力)"):
+        cal = pd.DataFrame([{"日期": a, "事件": b, "打法": c} for a, b, c in macro.CALENDAR])
+        st.dataframe(cal, use_container_width=True, hide_index=True)
+
     # 收集持仓代码 + 候选
     hold = []
     if os.path.exists(HOLDINGS_CSV):
@@ -555,7 +569,32 @@ def _action_table(rows):
 
 def page_research():
     st.subheader("📰 研报情报")
-    st.caption("从你 持仓 文件夹里的卖方研报(GS/UBS/MS/Citi)提取的目标价+核心逻辑+前瞻变化。"
+
+    # ── 深读战报(141份研报+5模型逐字深读的成果门面)──
+    st.markdown("#### 🎖️ 深读战报")
+    st.caption(f"as-of {findings.ASOF} · 范围:{findings.SCOPE}")
+    st.success(f"**战果:挡掉 {len(findings.CORRECTIONS)} 处错判 · 挖出 {len(findings.NEW_IDEAS)} 条新弹药 · "
+               f"形成 {len(findings.THESIS)} 条独立主线判断**(细节在各驾驶舱,此页为门面)")
+    t1, t2, t3 = st.tabs(["🧭 主线判断(Max独立)", "💣 新弹药", "🩹 纠错台账"])
+    with t1:
+        for name, judg in findings.THESIS:
+            st.markdown(f"**{name}** — {judg}")
+    with t2:
+        nd = pd.DataFrame([{"标的/赛道": a, "逻辑": b, "关键点": c, "状态": d}
+                           for a, b, c, d in findings.NEW_IDEAS])
+        st.dataframe(nd, use_container_width=True, hide_index=True,
+                     column_config={"逻辑": st.column_config.TextColumn(width="medium"),
+                                    "关键点": st.column_config.TextColumn(width="large")})
+    with t3:
+        st.caption("摘要会压平日期/评级/事实vs观点——这些坑全是亲读原文才抓出来的,每条附教训。")
+        cr = pd.DataFrame([{"标的": a, "原错判": b, "亲读纠正": c, "教训": d}
+                           for a, b, c, d in findings.CORRECTIONS])
+        st.dataframe(cr, use_container_width=True, hide_index=True,
+                     column_config={"亲读纠正": st.column_config.TextColumn(width="large"),
+                                    "教训": st.column_config.TextColumn(width="medium")})
+
+    st.divider()
+    st.caption("以下为逐篇提取的卖方研报情报(GS/UBS/MS/Citi):目标价+核心逻辑+前瞻变化。"
                "这是免费API给不了的——卖方的『为什么』和最新预期调整。")
     path = os.path.join(BASE_DIR, "research_intel.json")
     if not os.path.exists(path):
