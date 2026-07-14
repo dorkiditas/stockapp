@@ -83,7 +83,7 @@ def build_digest():
     # 当前可用入口(永久网址在最前;隧道由 keepalive.py 维护,变了也会单独推)
     lines.append("")
     lines.append("### 📱 打开工作台")
-    lines.append("- 永久网址(云端,笔记本无关):https://alphadesk.streamlit.app")
+    lines.append("- 永久网址(云端,笔记本无关):https://stockapp-99rbhabczaebwv2fkzqm9a.streamlit.app")
     lines.append("- 家里WiFi(固定):http://10.0.66.237:8501")
     try:
         turl = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
