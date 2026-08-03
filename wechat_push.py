@@ -122,7 +122,12 @@ def send(title, md):
     url = f"https://sctapi.ftqq.com/{key}.send"
     r = requests.post(url, data={"title": title, "desp": md}, timeout=15)
     ok = r.status_code == 200 and '"code":0' in r.text
-    print("发送", "成功" if ok else f"失败 {r.status_code} {r.text[:120]}")
+    # Windows 控制台默认 cp1252,中文 print 会抛 UnicodeEncodeError 让调用脚本 exit(1)
+    # (2026-08-02 夜:周日复盘推送已发出但脚本仍报错退出)。发送成败不该被打印毁掉。
+    try:
+        print("发送", "成功" if ok else f"失败 {r.status_code} {r.text[:120]}")
+    except UnicodeEncodeError:
+        print("SEND", "OK" if ok else f"FAIL {r.status_code}")
     return ok
 
 
