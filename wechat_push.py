@@ -119,8 +119,21 @@ def send(title, md):
         print(title, "\n")
         print(md)
         return False
-    url = f"https://sctapi.ftqq.com/{key}.send"
-    r = requests.post(url, data={"title": title, "desp": md}, timeout=15)
+    # 2026-08-07 傍晚:sctapi.ftqq.com 从她这台机器连接被重置(ConnectionResetError 10054,
+    # 沙箱内外一致、同时 baidu 200 = 不是断网,是这个 host 不通)。旧域名 sc.ftqq.com 实测可用。
+    # 因此改为双端点依次尝试,任一成功即算发出,避免风险推送因单一线路挂掉而静默丢失。
+    r = None
+    for url in (f"https://sctapi.ftqq.com/{key}.send", f"https://sc.ftqq.com/{key}.send"):
+        try:
+            r = requests.post(url, data={"text": title, "title": title, "desp": md}, timeout=20)
+            if r.status_code == 200 and '"code":0' in r.text:
+                break
+        except requests.RequestException as e:
+            print(f"[push] {url.split('/')[2]} 不可用: {type(e).__name__}")
+            r = None
+    if r is None:
+        print("[push] 两个端点都失败,本次推送未发出")
+        return False
     ok = r.status_code == 200 and '"code":0' in r.text
     # Windows 控制台默认 cp1252,中文 print 会抛 UnicodeEncodeError 让调用脚本 exit(1)
     # (2026-08-02 夜:周日复盘推送已发出但脚本仍报错退出)。发送成败不该被打印毁掉。
