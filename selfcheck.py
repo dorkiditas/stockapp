@@ -180,6 +180,23 @@ for r in log:
     if len(names) >= 2 and not CODE.search(body):
         warn('R9-公司标识', f'{r[1]}:点名了 {len(names)} 家中文公司却未给任何可核验代码')
 
+# ---------- 规则 10:数据文件完整性 ----------
+# 8/14 我用脚本批量改写 calls_log 时,正则把字段分隔符也改了,写出 6 字段与 8 字段的坏行。
+# 坏行会让 R3/R5/R6/R9 静默漏检 —— 闸门自己被绕过了。
+raw = []
+if os.path.exists(LOG):
+    raw = [r for r in csv.reader(open(LOG, encoding='utf-8')) if r]
+malformed = [i for i, r in enumerate(raw) if len(r) != 7]
+if malformed:
+    block('R10-数据完整性', f'calls_log.csv 有 {len(malformed)} 行字段数不是 7(行号 {malformed[:5]}…),'
+                           f'坏行会让其他闸门静默漏检,必须先修')
+led_raw = []
+if os.path.exists(LEDGER):
+    led_raw = [r for r in csv.reader(open(LEDGER, encoding='utf-8-sig')) if r]
+led_bad = [i for i, r in enumerate(led_raw) if len(r) < 3]
+if led_bad:
+    warn('R10-数据完整性', f'reading_ledger.csv 有 {len(led_bad)} 行字段数 <3')
+
 # ---------- 输出 ----------
 print('=' * 68)
 print(f'Max 自查闸门  {today}  ——  calls {len(MY_CALLS)} / 台账 {len(ledger)} / log {len(log)}')
