@@ -167,6 +167,19 @@ if macro_today:
     if not re.search(r'10\s*年期|长端|期限溢价|30\s*年期|收益率曲线', joined):
         block('R8-宏观长端', '今日有宏观判断但未包含长端/期限溢价读数。政策利率是二阶,长端是一阶。')
 
+# ---------- 规则 9:点名公司必须带可核验代码 ----------
+# 8/7 我把 SIEGY 认成西门子能源(实为西门子集团);8/14 我把江苏永鼎认成亨通光电。
+# 两次都是"中文名/英文名相近"导致的,而两次都能被一个代码检查挡住。
+CN_CO = re.compile(r'[\u4e00-\u9fff]{2,6}(?:光电|科技|股份|电气|能源|重工|集团|电子|通信|材料)')
+CODE = re.compile(r'\d{6}\.(?:SH|SZ|SS)|\d{4}\.(?:HK|TW|T)|[A-Z]{1,5}\.(?:O|N|OQ)|\b[A-Z]{2,5}\s*(?:US|美股)|代码')
+for r in log:
+    if r[0] != datetime.date.today().isoformat():
+        continue
+    body = r[4]
+    names = set(CN_CO.findall(body))
+    if len(names) >= 2 and not CODE.search(body):
+        warn('R9-公司标识', f'{r[1]}:点名了 {len(names)} 家中文公司却未给任何可核验代码')
+
 # ---------- 输出 ----------
 print('=' * 68)
 print(f'Max 自查闸门  {today}  ——  calls {len(MY_CALLS)} / 台账 {len(ledger)} / log {len(log)}')
