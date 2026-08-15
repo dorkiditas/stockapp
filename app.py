@@ -27,6 +27,7 @@ import chips
 import daily
 import macro
 import findings
+import serenity
 import theme
 
 _ICON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon.png")
@@ -970,6 +971,86 @@ def page_mlcc():
                "别拿它挤掉存储:同样'AI缺货',存储6-8x、MLCC 80-238x,非对称性一目了然。")
 
 
+def page_serenity():
+    st.subheader("🧬 白毛女蒸馏")
+    st.caption(f"X {serenity.HANDLE}(白毛股神/白毛女神)—— 蒸馏她的**方法论**,不抄她的**票**。as-of {serenity.ASOF}")
+    st.error(f"⚠️ **一手材料状态:** {serenity.SOURCE_STATE}")
+    st.caption("分级口径:" + " ｜ ".join(f"{g} = {d}" for g, d in serenity.GRADES))
+
+    t1, t2, t3, t4, t5, t6 = st.tabs(
+        ["🧭 方法论(要的东西)", "🚦 闸门+动作", "🔗 链路与标的", "🇨🇳 吹票事件簿", "⚠️ 风险/噪音", "👤 她是谁"])
+
+    with t1:
+        st.info("🎯 **一句话:** 从物理约束出发反向解码产业链,只买同时满足 "
+                "**卡脖子(绕不过)× 瓶颈(供给跟不上)** 的上游小票——和我们'小而集中难扩产'是同一族思路。")
+        md = pd.DataFrame([{"步骤": a, "她怎么做": b, "我方可复用性": c} for a, b, c in serenity.METHOD])
+        st.dataframe(md, use_container_width=True, hide_index=True,
+                     column_config={"她怎么做": st.column_config.TextColumn(width="large"),
+                                    "我方可复用性": st.column_config.TextColumn(width="medium")})
+        st.markdown("#### 🔁 与我们自己账本的交集/冲突")
+        ov = pd.DataFrame([{"主题": a, "她 vs 我们": b, "裁定": c} for a, b, c in serenity.OVERLAP])
+        st.dataframe(ov, use_container_width=True, hide_index=True,
+                     column_config={"她 vs 我们": st.column_config.TextColumn(width="large"),
+                                    "裁定": st.column_config.TextColumn(width="large")})
+
+    with t2:
+        st.success("**蒸馏的落点是闸门,不是股票池。**")
+        for k, v in serenity.GATE:
+            st.markdown(f"- **{k}** — {v}")
+        st.markdown("#### 🎬 动作")
+        ac = pd.DataFrame([{"动作": a, "内容": b, "状态": c} for a, b, c in serenity.ACTIONS])
+        st.dataframe(ac, use_container_width=True, hide_index=True,
+                     column_config={"内容": st.column_config.TextColumn(width="large")})
+        st.markdown("#### 📌 要把本页从🟡升到🟢,必须亲读")
+        for x in serenity.VERIFY_TODO:
+            st.markdown(f"- {x}")
+
+    with t3:
+        st.caption("她的主战场=CPO/光互联。层级是她的,裁定是我们的。")
+        ch = pd.DataFrame([{"链路层": a, "卡点": b, "她点名的标的": c, "分级": d} for a, b, c, d in serenity.CHAIN])
+        st.dataframe(ch, use_container_width=True, hide_index=True,
+                     column_config={"卡点": st.column_config.TextColumn(width="medium"),
+                                    "她点名的标的": st.column_config.TextColumn(width="large")})
+        st.markdown("#### 🔫 她最常提的名字(第三方统计,口径未公开)")
+        nm = pd.DataFrame([{"代码": a, "名称/角色": b, "她的论点": c, "我方裁定": d} for a, b, c, d in serenity.NAMES])
+        st.dataframe(nm, use_container_width=True, hide_index=True,
+                     column_config={"她的论点": st.column_config.TextColumn(width="large")})
+        st.markdown("#### 🔦 8月新料:AI光通信卡在激光器(她一晚点三家财报)")
+        al = pd.DataFrame([{"来源": a, "说法": b, "分级": c} for a, b, c in serenity.AUG_LASER])
+        st.dataframe(al, use_container_width=True, hide_index=True,
+                     column_config={"说法": st.column_config.TextColumn(width="large")})
+        st.warning("三家电话会原文我都没读到(站点被拦)——按 G2,这一屏在核原文前只能当线索。")
+
+    with t4:
+        st.caption("这部分有行情可对账,是全页最硬的证据:她对A股的影响是真的,所以'跟'的风险也是真的。")
+        ev = pd.DataFrame([{"日期": a, "标的": b, "她说了什么": c, "市场反应": d, "分级": e}
+                           for a, b, c, d, e in serenity.ASHARE_EVENTS])
+        st.dataframe(ev, use_container_width=True, hide_index=True,
+                     column_config={"她说了什么": st.column_config.TextColumn(width="medium"),
+                                    "市场反应": st.column_config.TextColumn(width="large")})
+        st.error("**G5:她点名的A股一律不跟。**境外匿名 + 境内20CM + 我们在信息末端,三条全占。")
+
+    with t5:
+        st.markdown("#### ⚠️ 跟单风险")
+        for k, v in serenity.RISKS:
+            st.markdown(f"- **{k}** — {v}")
+        st.markdown("#### 🩹 二手噪音纠错台账(蒸馏过程中当场抓到的)")
+        nz = pd.DataFrame([{"项": a, "二手说法": b, "核对": c, "教训": d} for a, b, c, d in serenity.NOISE])
+        st.dataframe(nz, use_container_width=True, hide_index=True,
+                     column_config={"核对": st.column_config.TextColumn(width="large")})
+
+    with t6:
+        wh = pd.DataFrame([{"项": a, "内容": b, "分级": c} for a, b, c in serenity.WHO])
+        st.dataframe(wh, use_container_width=True, hide_index=True,
+                     column_config={"内容": st.column_config.TextColumn(width="large")})
+        with st.expander("📚 来源清单(全部为二手;一手站点本机不可达)"):
+            for t, u in serenity.SOURCES:
+                st.markdown(f"- [{t}]({u})")
+
+    st.caption("怎么用这一页:把 G1-G5 当闸门跑我们自己的候选池;她的标的只当'哪一层在缺'的传感器。"
+               "她的α已被工业化(推文被做成skill包+多个跟单站),跟随者拥挤度自我强化——方法论可蒸馏,仓位不可代管。")
+
+
 def page_radar():
     st.subheader("📡 赛道机会雷达")
     st.caption("全球AI卡脖子环节,按 产业景气度 × 竞争格局 × 壁垒 排序(主轴)。"
@@ -1006,8 +1087,8 @@ def _fmt(df, with_market=False):
 # ============================================================================
 theme.header(meta_right=dt.datetime.now().strftime("%Y-%m-%d %H:%M"))
 tabs = st.tabs(["📊 我的持仓", "📈 净值/AUM", "🎯 操作建议", "🗺️ 产业链地图", "🔬 芯片战情室", "💾 存储驾驶舱",
-                "🔩 MLCC驾驶舱", "📡 赛道机会雷达", "📰 研报情报", "🔮 前瞻信号", "💡 AI估值+拥挤",
-                "🧪 AI芯片材料", "🚀 太空经济", "🌐 全球选股"])
+                "🔩 MLCC驾驶舱", "📡 赛道机会雷达", "📰 研报情报", "🧬 白毛女蒸馏", "🔮 前瞻信号",
+                "💡 AI估值+拥挤", "🧪 AI芯片材料", "🚀 太空经济", "🌐 全球选股"])
 with tabs[0]:
     page_portfolio()
 with tabs[1]:
@@ -1033,13 +1114,15 @@ with tabs[7]:
 with tabs[8]:
     page_research()
 with tabs[9]:
-    page_forward()
+    page_serenity()
 with tabs[10]:
-    page_aimap()
+    page_forward()
 with tabs[11]:
-    page_themes()
+    page_aimap()
 with tabs[12]:
-    page_space()
+    page_themes()
 with tabs[13]:
+    page_space()
+with tabs[14]:
     page_pick()
 st.caption("Alpha Desk · 墨绿金主题 build 2026.07.04c · 数据来自公开行情接口，仅供研究，非投资建议。")
