@@ -39,7 +39,27 @@ if n_src != len(calls.MY_CALLS):
 else:
     print(f'[OK] MY_CALLS 源码==载入 {n_src} 键')
 
-thin = [k for k, (r, b) in calls.MY_CALLS.items() if len(b) < 40]
+# ---------------------------------------------------------------------------
+# 结构闸门(2026-08-15 加):MY_CALLS / MY_BUYS 的每个值必须是 (评级, 正文) 二元组。
+# 起因:写档案时把两段之间的逗号写成了全角的『, 』,Python 就把它当成隐式字符串
+# 拼接,二元组静默塌成一个长字符串。app.py 的 build(c, *MY_CALLS[c]) 于是按字符
+# 展开 → TypeError,『🎯 操作建议』页对该标的整页崩,微信推送同源。
+# 2026-08-15 实际后果:21 个持仓里 16 个塌成字符串,包含 QCOM/SIEGY/EWY/CBRS
+# 四只重仓——她最该看的四只,恰恰是页面上看不到的四只。而本文件第 42 行原本就是
+# 按二元组解包的,它本该第一个发现,却先于报告自己崩掉了。
+# 这一条比"记得写对逗号"可靠:塌了就红,不依赖我记性。
+# ---------------------------------------------------------------------------
+for dname, d in (('MY_CALLS', calls.MY_CALLS), ('MY_BUYS', calls.MY_BUYS)):
+    flat = [k for k, v in d.items() if not (isinstance(v, tuple) and len(v) == 2)]
+    if flat:
+        bad = True
+        print(f'[FAIL] {dname} 以下值不是(评级,正文)二元组,App 会崩: ' + ', '.join(flat))
+        print('       多半是把分隔逗号写成了全角『, 』(隐式拼接);改回真逗号即可')
+    else:
+        print(f'[OK] {dname} 结构闸门: {len(d)} 个值全部是二元组')
+
+thin = [k for k, v in calls.MY_CALLS.items()
+        if isinstance(v, tuple) and len(v) == 2 and len(v[1]) < 40]
 if thin:
     print(f'[INFO] 正文<40字(可能覆盖不足): {", ".join(thin)}')
 
