@@ -28,6 +28,7 @@ import daily
 import macro
 import findings
 import heavy
+import scorecard
 import theme
 
 _ICON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon.png")
@@ -568,6 +569,61 @@ def _action_table(rows):
                  })
 
 
+def page_scorecard():
+    st.subheader("🧾 Max 记分牌")
+    st.caption("每一条 call 值多少钱,机械算出来的,不是我复述的。"
+               "口径写死在 scorecard.py:卖出类价格跌了算我对,持有类价格涨了算我对;"
+               "**风险预算类照样打分、单独统计、不计入战绩**;数据不全的一律排除,不许用起点凑数。")
+
+    refresh = st.checkbox("联网刷新价格(慢,离线时留空用 IB 收盘缓存)", value=False)
+    rows, summ, src = scorecard.score(refresh)
+    st.caption(f"价格源:{src}")
+
+    cards = [(k, v) for k, v in summ.items() if k != "排除项" and v.get("n")]
+    cols = st.columns(max(1, len(cards)))
+    for col, (k, v) in zip(cols, cards):
+        col.metric(k.replace("  └ ", ""), f"{v['命中率']:.0f}% 命中",
+                   f"{v['美元合计']:+,.0f}  (n={v['n']})",
+                   delta_color="normal" if v["美元合计"] >= 0 else "inverse")
+
+    df = pd.DataFrame([{"代码": r["code"], "在案动作": r["action"], "方向": r["side"],
+                        "类型": r["kind"], "下达": r["called"], "参考价": r["ref_used"],
+                        "现价": r.get("现价"), "+7天%": r.get("+7天"), "+30天%": r.get("+30天"),
+                        "至今%": r.get("至今"), "至今$": r.get("至今$"),
+                        "状态": r["status"], "出处": r.get("src", ""), "备注": r.get("note", "")}
+                       for r in rows if "excluded" not in r])
+    st.dataframe(df, use_container_width=True, hide_index=True,
+                 column_config={
+                     "参考价": st.column_config.NumberColumn(format="%.2f"),
+                     "现价": st.column_config.NumberColumn(format="%.2f"),
+                     "+7天%": st.column_config.NumberColumn(format="%+.1f%%"),
+                     "+30天%": st.column_config.NumberColumn(format="%+.1f%%"),
+                     "至今%": st.column_config.NumberColumn(format="%+.1f%%"),
+                     "至今$": st.column_config.NumberColumn(
+                         format="%+.0f", help="正=听我赚了;负=听我亏了"),
+                     "备注": st.column_config.TextColumn(width="large"),
+                 })
+
+    if summ["排除项"]:
+        with st.expander(f"⛔ 排除出汇总的 {len(summ['排除项'])} 条(数据不全)"):
+            for x in summ["排除项"]:
+                st.markdown(f"- {x}")
+
+    todo, nopx = scorecard.unlogged()
+    if todo:
+        st.error("⚠️ 台账落后于档案 —— 以下 call 在 calls.py 里有,却没进记分牌:\n\n"
+                 + "\n".join(f"- {g}" for g in todo)
+                 + "\n\n**落后的台账比没有台账更骗人。让 Max 补进 CALLS_LEDGER。**")
+    else:
+        st.success("✅ 台账完整性闸门:档案里的动作 call 都已入账。")
+    if nopx:
+        with st.expander(f"○ 暂无价格源、无法记分的 {len(nopx)} 条"):
+            for g in nopx:
+                st.markdown(f"- {g}")
+
+    st.info(scorecard.RECONCILE_NOTE)
+
+
 def page_heavy():
     st.subheader("🎯 重仓深跟")
     acct, src = heavy.load_account()
@@ -1096,19 +1152,21 @@ def _fmt(df, with_market=False):
 
 # ============================================================================
 theme.header(meta_right=dt.datetime.now().strftime("%Y-%m-%d %H:%M"))
-tabs = st.tabs(["📊 我的持仓", "🎯 重仓深跟", "📈 净值/AUM", "🎯 操作建议", "🗺️ 产业链地图",
+tabs = st.tabs(["📊 我的持仓", "🧾 Max记分牌", "🎯 重仓深跟", "📈 净值/AUM", "🎯 操作建议", "🗺️ 产业链地图",
                 "🔬 芯片战情室", "💾 存储驾驶舱",
                 "🔩 MLCC驾驶舱", "📡 赛道机会雷达", "📰 研报情报", "🔮 前瞻信号", "💡 AI估值+拥挤",
                 "🧪 AI芯片材料", "🚀 太空经济", "🌐 全球选股"])
 with tabs[0]:
     page_portfolio()
 with tabs[1]:
-    page_heavy()
+    page_scorecard()
 with tabs[2]:
-    page_nav()
+    page_heavy()
 with tabs[3]:
-    page_actions()
+    page_nav()
 with tabs[4]:
+    page_actions()
+with tabs[5]:
     # 产业链地图:11环节链谱(做什么/空间/拥挤/估值/持仓位置),Max手绘HTML
     _map_path = os.path.join(BASE_DIR, "chain_map.html")
     if os.path.exists(_map_path):
@@ -1116,24 +1174,24 @@ with tabs[4]:
         _components.html(open(_map_path, encoding="utf-8").read(), height=3400, scrolling=True)
     else:
         st.info("chain_map.html 缺失,让 Max 重新生成。")
-with tabs[5]:
-    page_chips()
 with tabs[6]:
-    page_storage()
+    page_chips()
 with tabs[7]:
-    page_mlcc()
+    page_storage()
 with tabs[8]:
-    page_radar()
+    page_mlcc()
 with tabs[9]:
-    page_research()
+    page_radar()
 with tabs[10]:
-    page_forward()
+    page_research()
 with tabs[11]:
-    page_aimap()
+    page_forward()
 with tabs[12]:
-    page_themes()
+    page_aimap()
 with tabs[13]:
-    page_space()
+    page_themes()
 with tabs[14]:
+    page_space()
+with tabs[15]:
     page_pick()
 st.caption("Alpha Desk · 墨绿金主题 build 2026.07.04c · 数据来自公开行情接口，仅供研究，非投资建议。")
