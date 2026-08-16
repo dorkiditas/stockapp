@@ -197,6 +197,27 @@ led_bad = [i for i, r in enumerate(led_raw) if len(r) < 3]
 if led_bad:
     warn('R10-数据完整性', f'reading_ledger.csv 有 {len(led_bad)} 行字段数 <3')
 
+# ---------- 规则 11:记分台账不许落后于档案(2026-08-15 加) ----------
+# 起因是她那句「你经常判断不靠谱,我怎么信你」。正确答案是【不信,查】,
+# 但当时她查不了:档案里 49 处撤回、14 处认错,却没有一处换算成钱。
+# scorecard.py 把每条 call 打成分;这条闸门保证台账不会悄悄落后 ——
+# **落后的记分牌比没有记分牌更骗人**,因为它看起来像在记分。
+try:
+    import scorecard as _sc
+    _todo, _nopx = _sc.unlogged()
+    if _todo:
+        block('R11-记分台账', '以下 call 在 calls.py 里有、却没进 scorecard.CALLS_LEDGER:'
+                             + ';'.join(_todo))
+    for _m in _nopx:
+        warn('R11-记分台账', _m)
+    _rows, _summ, _ = _sc.score()
+    _p = _summ.get('price类(计入战绩)', {})
+    if _p.get('n'):
+        print(f"[记分牌] price类 n={_p['n']} 命中率 {_p['命中率']:.0f}% "
+              f"美元合计 {_p['美元合计']:+,.0f}(risk类单列,见 scorecard.py)")
+except Exception as _e:
+    warn('R11-记分台账', f'scorecard.py 跑不起来({type(_e).__name__}:{_e}),记分牌今天是瞎的')
+
 # ---------- 输出 ----------
 print('=' * 68)
 print(f'Max 自查闸门  {today}  ——  calls {len(MY_CALLS)} / 台账 {len(ledger)} / log {len(log)}')
