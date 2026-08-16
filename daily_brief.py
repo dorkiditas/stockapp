@@ -104,10 +104,21 @@ def render(today=None, live=True):
     stale = not live_px
 
     s, c = heavy.stress(), heavy.concentration()
+    age = (t - dt.date.fromisoformat(heavy.ASOF)).days if stale else 0
     L = [f"# 持仓日报 · {t.isoformat()}", ""]
     if stale:
-        L += [f"> ⚠️ **数据陈旧**:没取到实时行情,以下为 **{heavy.ASOF}** 的 IB 快照"
-              f"(来源:{asrc})。**今日涨跌一栏为空,不是 0。**", ""]
+        # 陈旧要分级。一份每天准时到、数字却一个月没变的日报,
+        # 和 wechat_push 旧版写死『建 MU 仓』是同一类错误的两种长相 ——
+        # 都是"看起来在更新"。所以过了 3 天就不再只是横幅,而是全篇第一句话。
+        if age >= 3:
+            L += ["> # 🛑 这份日报没有新数据",
+                  f"> 价格与账户快照停在 **{heavy.ASOF}**,距今 **{age} 天**。"
+                  f"下面第①②节的所有数字都是那天的,**不是今天的**。",
+                  "> 变的只有第③节的挂单天数和第④节的倒计时(它们按日历走,不依赖行情)。",
+                  "> **修法见 README_日报.md:定时会话拿不到 IB 授权,也连不上行情源。**", ""]
+        else:
+            L += [f"> ⚠️ **数据陈旧**:没取到实时行情,以下为 **{heavy.ASOF}** 的 IB 快照"
+                  f"(来源:{asrc},距今 {age} 天)。**今日涨跌一栏为空,不是 0。**", ""]
 
     # ① 账户
     L += ["## ① 账户", "",
@@ -145,9 +156,11 @@ def render(today=None, live=True):
         L += ["| 标的 | 动作 | 下达 | 挂了几天 | 下达价 | 现价 | 不执行盈亏 | 类型 |",
               "|---|---|---|---|---|---|---|---|"]
         for r in rows:
-            age = (t - dt.date.fromisoformat(r["下达日"])).days
-            flag = " ⚠️" if age >= 5 else ""
-            L.append(f"| **{r['代码']}** | {r['在案动作']} | {r['下达日']} | {age} 天{flag} | "
+            # ⚠️ 别用 age 这个名字:它会盖掉上面算的"快照陈旧天数",
+            # 结果是标题写着"快照 9 天前"而正文横幅按 1 天走(2026-08-15 实际踩过)。
+            call_age = (t - dt.date.fromisoformat(r["下达日"])).days
+            flag = " ⚠️" if call_age >= 5 else ""
+            L.append(f"| **{r['代码']}** | {r['在案动作']} | {r['下达日']} | {call_age} 天{flag} | "
                      f"{r['下达价']:.2f} | {r['现价']:.2f} | {r['未执行盈亏']:+,.0f} | {r['类型']} |")
         L += ["", f"合计 **{tot:+,.0f}**(价格判断类 {tot_price:+,.0f};风险预算类不按择时记分)。",
               "⚠️ = 已挂满 5 个日历日,按 `EXECUTION_RATE_RULE` 必须重新论证或撤回。", ""]
@@ -188,8 +201,11 @@ def render(today=None, live=True):
 
     md = "\n".join(L)
     _gate(md)
-    title = (f"持仓日报 {t.strftime('%m-%d')} · 杠杆{s['杠杆']:.2f} 缓冲${s['缓冲']:,.0f}"
-             + (f" · {len(rows)}条待执行" if rows else ""))
+    if stale and age >= 3:
+        title = f"⚠️ 持仓日报 {t.strftime('%m-%d')} · 无新数据(快照停在 {heavy.ASOF},{age} 天前)"
+    else:
+        title = (f"持仓日报 {t.strftime('%m-%d')} · 杠杆{s['杠杆']:.2f} 缓冲${s['缓冲']:,.0f}"
+                 + (f" · {len(rows)}条待执行" if rows else ""))
     return title, md
 
 
