@@ -27,7 +27,6 @@
 """
 import os
 import json
-import datetime as dt
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 HOLD = os.path.join(BASE, "holdings.csv")
