@@ -1,0 +1,33 @@
+{
+  "_doc": "标的身份注册表。每个出现在 calls.py MY_CALLS 里的代码,必须先在这里有一条【经一级源核实】的身份记录,check_calls.py 才放行。起因:2026-08-07 我发现自己把 SIEGY 当成西门子能源跑了至少五班论据,而 IB 自己的 search_contracts 一次调用就能给出正确答案——问题不是信息拿不到,是我从没去拿。规则:verified_by 必须是券商/交易所/公司IR一级源,不许写'常识'或'新闻';ratio 指 ADR 比例(1 ADR = ? 普通股),非 ADR 写 null。",
+  "_verified_date": "2026-08-07",
+  "positions": {
+    "AVGO":  {"legal_entity": "Broadcom Inc",                  "type": "STK", "listing": "NASDAQ", "adr_ratio": null,  "verified_by": "IBKR search_contracts contract_id 313130367"},
+    "CBRS":  {"legal_entity": "Cerebras Systems Inc - Class A", "type": "STK", "listing": "NASDAQ", "adr_ratio": null,  "verified_by": "IBKR search_contracts contract_id 882732191"},
+    "DXYZ":  {"legal_entity": "Destiny Tech100 Inc",            "type": "CEF", "listing": "NYSE",   "adr_ratio": null,  "verified_by": "IBKR search_contracts contract_id 692783792"},
+    "EWY":   {"legal_entity": "iShares MSCI South Korea ETF",   "type": "ETF", "listing": "ARCA",   "adr_ratio": null,  "verified_by": "IBKR trade record company_name, contract_id 10753248"},
+    "EWT":   {"legal_entity": "iShares MSCI Taiwan ETF",        "type": "ETF", "listing": "ARCA",   "adr_ratio": null,  "verified_by": "IBKR trade record company_name, contract_id 253190576"},
+    "EWZ":   {"legal_entity": "iShares MSCI Brazil ETF",        "type": "ETF", "listing": "ARCA",   "adr_ratio": null,  "verified_by": "IBKR search_contracts contract_id 10753244"},
+    "GEV":   {"legal_entity": "GE Vernova Inc",                 "type": "STK", "listing": "NYSE",   "adr_ratio": null,  "verified_by": "IBKR search_contracts contract_id 691984365"},
+    "NASA":  {"legal_entity": "Tema Space Innovators ETF",      "type": "ETF", "listing": "ARCA",   "adr_ratio": null,  "verified_by": "IBKR search_contracts contract_id 869314618"},
+    "QCOM":  {"legal_entity": "QUALCOMM Inc",                   "type": "STK", "listing": "NASDAQ", "adr_ratio": null,  "verified_by": "IBKR search_contracts contract_id 273544"},
+    "SPCX":  {"legal_entity": "Space Exploration Technologies Corp - Class A", "type": "STK", "listing": "NASDAQ", "adr_ratio": null, "verified_by": "IBKR trade record company_name, contract_id 890493863"},
+
+    "SIEGY": {"legal_entity": "Siemens AG (SPONS ADR)",         "type": "ADR", "listing": "OTC PINK / 主上市 XETRA", "adr_ratio": "2 ADR = 1 普通股",
+              "verified_by": "IBKR search_contracts contract_id 12129 -> 'SIEMENS AG-SPONS ADR' + 西门子 IR/ADR 官网 + Nasdaq/Morningstar 交叉",
+              "NOT": "★不是 Siemens Energy(西门子能源)。西门子能源 ADR = SMNEY / SMEGF,2020 年从 Siemens AG 分拆。Siemens AG 截至 2026-03-31 仅持有西门子能源 10.14% 且持续减持。",
+              "error_log": "2026-08-04 与 2026-08-05 我用西门子能源的燃机订单数据给该仓位下判断,论据无效,已于 2026-08-07 作废并重建。"},
+
+    "000725": {"legal_entity": "京东方A",     "type": "A股", "listing": "深主板", "adr_ratio": null, "verified_by": "腾讯行情 qt.gtimg.cn 返回名称"},
+    "002428": {"legal_entity": "云南锗业",     "type": "A股", "listing": "深主板", "adr_ratio": null, "verified_by": "腾讯行情 qt.gtimg.cn 返回名称"},
+    "002475": {"legal_entity": "立讯精密",     "type": "A股", "listing": "深主板", "adr_ratio": null, "verified_by": "腾讯行情 qt.gtimg.cn 返回名称"},
+    "600522": {"legal_entity": "中天科技",     "type": "A股", "listing": "沪主板", "adr_ratio": null, "verified_by": "腾讯行情 qt.gtimg.cn 返回名称"},
+    "600584": {"legal_entity": "长电科技",     "type": "A股", "listing": "沪主板", "adr_ratio": null, "verified_by": "腾讯行情 qt.gtimg.cn 返回名称"},
+    "600703": {"legal_entity": "三安光电",     "type": "A股", "listing": "沪主板", "adr_ratio": null, "verified_by": "腾讯行情 qt.gtimg.cn 返回名称"},
+
+    "CRDO":  {"legal_entity": "Credo Technology Group Holding Ltd", "type": "STK", "listing": "NASDAQ", "adr_ratio": null, "verified_by": "IBKR trade record company_name (已清仓归档)"},
+    "PLTR":  {"legal_entity": "Palantir Technologies Inc - Class A", "type": "STK", "listing": "NASDAQ", "adr_ratio": null, "verified_by": "IBKR trade record company_name (已清仓归档)"},
+    "BE":    {"legal_entity": "Bloom Energy Corp - Class A",    "type": "STK", "listing": "NYSE",   "adr_ratio": null, "verified_by": "IBKR trade record company_name (空头已了结归档)"},
+    "USO":   {"legal_entity": "United States Oil Fund LP",      "type": "ETF", "listing": "ARCA",   "adr_ratio": null, "verified_by": "观察项,非持仓;待建仓前需重新核实"}
+  }
+}

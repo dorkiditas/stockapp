@@ -27,6 +27,8 @@ import chips
 import daily
 import macro
 import findings
+import heavy
+import scorecard
 import theme
 
 _ICON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon.png")
@@ -567,6 +569,151 @@ def _action_table(rows):
                  })
 
 
+def page_scorecard():
+    st.subheader("🧾 Max 记分牌")
+    st.caption("每一条 call 值多少钱,机械算出来的,不是我复述的。"
+               "口径写死在 scorecard.py:卖出类价格跌了算我对,持有类价格涨了算我对;"
+               "**风险预算类照样打分、单独统计、不计入战绩**;数据不全的一律排除,不许用起点凑数。")
+
+    refresh = st.checkbox("联网刷新价格(慢,离线时留空用 IB 收盘缓存)", value=False)
+    rows, summ, src = scorecard.score(refresh)
+    st.caption(f"价格源:{src}")
+
+    cards = [(k, v) for k, v in summ.items() if k != "排除项" and v.get("n")]
+    cols = st.columns(max(1, len(cards)))
+    for col, (k, v) in zip(cols, cards):
+        col.metric(k.replace("  └ ", ""), f"{v['命中率']:.0f}% 命中",
+                   f"{v['美元合计']:+,.0f}  (n={v['n']})",
+                   delta_color="normal" if v["美元合计"] >= 0 else "inverse")
+
+    df = pd.DataFrame([{"代码": r["code"], "在案动作": r["action"], "方向": r["side"],
+                        "类型": r["kind"], "下达": r["called"], "参考价": r["ref_used"],
+                        "现价": r.get("现价"), "+7天%": r.get("+7天"), "+30天%": r.get("+30天"),
+                        "至今%": r.get("至今"), "至今$": r.get("至今$"),
+                        "状态": r["status"], "出处": r.get("src", ""), "备注": r.get("note", "")}
+                       for r in rows if "excluded" not in r])
+    st.dataframe(df, use_container_width=True, hide_index=True,
+                 column_config={
+                     "参考价": st.column_config.NumberColumn(format="%.2f"),
+                     "现价": st.column_config.NumberColumn(format="%.2f"),
+                     "+7天%": st.column_config.NumberColumn(format="%+.1f%%"),
+                     "+30天%": st.column_config.NumberColumn(format="%+.1f%%"),
+                     "至今%": st.column_config.NumberColumn(format="%+.1f%%"),
+                     "至今$": st.column_config.NumberColumn(
+                         format="%+.0f", help="正=听我赚了;负=听我亏了"),
+                     "备注": st.column_config.TextColumn(width="large"),
+                 })
+
+    if summ["排除项"]:
+        with st.expander(f"⛔ 排除出汇总的 {len(summ['排除项'])} 条(数据不全)"):
+            for x in summ["排除项"]:
+                st.markdown(f"- {x}")
+
+    todo, nopx = scorecard.unlogged()
+    if todo:
+        st.error("⚠️ 台账落后于档案 —— 以下 call 在 calls.py 里有,却没进记分牌:\n\n"
+                 + "\n".join(f"- {g}" for g in todo)
+                 + "\n\n**落后的台账比没有台账更骗人。让 Max 补进 CALLS_LEDGER。**")
+    else:
+        st.success("✅ 台账完整性闸门:档案里的动作 call 都已入账。")
+    if nopx:
+        with st.expander(f"○ 暂无价格源、无法记分的 {len(nopx)} 条"):
+            for g in nopx:
+                st.markdown(f"- {g}")
+
+    st.info(scorecard.RECONCILE_NOTE)
+
+
+def page_heavy():
+    st.subheader("🎯 重仓深跟")
+    acct, src = heavy.load_account()
+    st.caption(f"跟踪基准 **{heavy.ASOF}** · 账户来源:{src} · {heavy.ASOF_NOTE}")
+
+    s, c = heavy.stress(), heavy.concentration()
+    k = st.columns(5)
+    k[0].metric("杠杆", f"{s['杠杆']:.2f}x",
+                f"{s['杠杆'] - heavy.PREV['leverage']:+.2f} vs {heavy.PREV['date']}",
+                delta_color="inverse")
+    k[1].metric("缓冲", f"${s['缓冲']:,.0f}",
+                f"{s['缓冲'] - heavy.PREV['excess_liquidity']:+,.0f}")
+    k[2].metric("缓冲/净值", f"{s['缓冲/净值%']:.1f}%")
+    k[3].metric("全书同步跌多少缓冲归零", f"{s['同步跌归零%_保守']:.2f}%",
+                f"计入保证金释放 {s['同步跌归零%_计入保证金释放']:.2f}%", delta_color="off")
+    k[4].metric("第一大仓占净值", f"{c['第一大仓'][2]:.1f}%", c['第一大仓'][0], delta_color="off")
+
+    st.markdown(f"**集中度** — top3 **{c['top3']:.1f}%** / top5 **{c['top5']:.1f}%** 净值;"
+                f"太空因子(SPCX+DXYZ+NASA)**{c['太空因子']:.1f}%**;"
+                f"档案标🔴清理的死钱三笔(DXYZ+EWZ+NASA)**{c['死钱三笔']:.1f}%**;"
+                f"全书浮动盈亏合计 **${c['浮动盈亏合计']:,.0f}**。")
+
+    # ── 执行差:本页的主角。放在最上面,因为它是唯一会随时间恶化的一栏 ──
+    st.markdown("#### ⏳ 执行差 — 档案在案、实盘未执行的卖出 call")
+    rows, tot, tot_price = heavy.execution_gap()
+    if rows:
+        st.dataframe(pd.DataFrame(rows)[["代码", "在案动作", "下达日", "股数", "下达价",
+                                         "现价", "未执行盈亏", "类型", "理由"]],
+                     use_container_width=True, hide_index=True,
+                     column_config={
+                         "下达价": st.column_config.NumberColumn(format="%.2f"),
+                         "现价": st.column_config.NumberColumn(format="%.2f"),
+                         "未执行盈亏": st.column_config.NumberColumn(
+                             format="%+.0f",
+                             help="正=拖到现在反而占便宜;负=拖延吃了亏。两者都不改变 call 本身对不对。"),
+                         "理由": st.column_config.TextColumn(width="large"),
+                     })
+        st.caption(f"合计 **{tot:+,.0f}**,其中价格判断类 **{tot_price:+,.0f}**。"
+                   "风险预算类(降 gross / 降集中度)**不按择时记分** —— "
+                   "它买的是『缓冲不被吃掉』这份保险,保险没赔付不等于保险买错了。")
+    else:
+        st.success("在案卖出 call 已全部了结。")
+
+    st.markdown("#### 📦 仓位与集中度")
+    pos = pd.DataFrame(heavy.positions())
+    pos["重仓"] = pos["重仓"].map({True: "★", False: ""})
+    st.dataframe(pos[["代码", "重仓", "股数", "现价", "成本", "市值", "浮动盈亏",
+                      "浮动%", "%净值", "%gross", "上日盈亏"]],
+                 use_container_width=True, hide_index=True,
+                 column_config={
+                     "现价": st.column_config.NumberColumn(format="%.2f"),
+                     "成本": st.column_config.NumberColumn(format="%.2f"),
+                     "市值": st.column_config.NumberColumn(format="%.0f"),
+                     "浮动盈亏": st.column_config.NumberColumn(format="%+.0f"),
+                     "上日盈亏": st.column_config.NumberColumn(format="%+.0f"),
+                     "浮动%": st.column_config.NumberColumn(format="%.1f%%"),
+                     "%净值": st.column_config.NumberColumn(
+                         format="%.1f%%", help=f"★ = |市值| ≥ 净值的 {heavy.HEAVY_THRESHOLD:.0%}"),
+                     "%gross": st.column_config.NumberColumn(format="%.2f%%"),
+                 })
+
+    st.markdown("#### 💥 单票冲击 → 吃掉多少缓冲")
+    sh = pd.DataFrame(heavy.single_name_shocks())
+    st.dataframe(sh[["情景", "冲击%", "金额", "占缓冲%"]],
+                 use_container_width=True, hide_index=True,
+                 column_config={
+                     "冲击%": st.column_config.NumberColumn(format="%.1f%%"),
+                     "金额": st.column_config.NumberColumn(format="%+.0f"),
+                     "占缓冲%": st.column_config.ProgressColumn(
+                         format="%.1f%%", min_value=0.0,
+                         max_value=float(max(100.0, sh["占缓冲%"].max()))),
+                 })
+    st.caption("3σ 单日 = 各票自己的年化历史波动 ÷ √252 × 3(IB 读数),不是全书统一假设。")
+
+    st.markdown("#### 🔍 逐只跟踪卡")
+    st.caption("每张卡固定四格:现状 / 在案动作与执行态 / 下一个【有日期】的催化 / 让我错的那件事。"
+               "缺一格就说明这只票没跟到位。完整论据仍在『🎯 操作建议』与 calls.py 档案。")
+    for code, card in heavy.TRACK.items():
+        pct = next((r["%净值"] for r in heavy.positions() if r["代码"] == code), 0)
+        with st.expander(f"{code} · 占净值 {pct:.1f}%", expanded=(code in ("SIEGY", "SPCX"))):
+            st.markdown(f"**现状** — {card['现状']}")
+            st.markdown(f"**在案动作** — {card['在案动作']}")
+            st.markdown(f"**下一个有日期的催化** — {card['催化']}")
+            st.markdown(f"**让我错的那件事** — {card['证伪']}")
+            st.markdown(f"**本班新增** — {card['本班新增']}")
+
+    st.markdown("#### 🧾 本班结论")
+    st.markdown(heavy.VERDICT)
+
+
 def page_research():
     st.subheader("📰 研报情报")
 
@@ -1005,16 +1152,21 @@ def _fmt(df, with_market=False):
 
 # ============================================================================
 theme.header(meta_right=dt.datetime.now().strftime("%Y-%m-%d %H:%M"))
-tabs = st.tabs(["📊 我的持仓", "📈 净值/AUM", "🎯 操作建议", "🗺️ 产业链地图", "🔬 芯片战情室", "💾 存储驾驶舱",
+tabs = st.tabs(["📊 我的持仓", "🧾 Max记分牌", "🎯 重仓深跟", "📈 净值/AUM", "🎯 操作建议", "🗺️ 产业链地图",
+                "🔬 芯片战情室", "💾 存储驾驶舱",
                 "🔩 MLCC驾驶舱", "📡 赛道机会雷达", "📰 研报情报", "🔮 前瞻信号", "💡 AI估值+拥挤",
                 "🧪 AI芯片材料", "🚀 太空经济", "🌐 全球选股"])
 with tabs[0]:
     page_portfolio()
 with tabs[1]:
-    page_nav()
+    page_scorecard()
 with tabs[2]:
-    page_actions()
+    page_heavy()
 with tabs[3]:
+    page_nav()
+with tabs[4]:
+    page_actions()
+with tabs[5]:
     # 产业链地图:11环节链谱(做什么/空间/拥挤/估值/持仓位置),Max手绘HTML
     _map_path = os.path.join(BASE_DIR, "chain_map.html")
     if os.path.exists(_map_path):
@@ -1022,24 +1174,24 @@ with tabs[3]:
         _components.html(open(_map_path, encoding="utf-8").read(), height=3400, scrolling=True)
     else:
         st.info("chain_map.html 缺失,让 Max 重新生成。")
-with tabs[4]:
-    page_chips()
-with tabs[5]:
-    page_storage()
 with tabs[6]:
-    page_mlcc()
+    page_chips()
 with tabs[7]:
-    page_radar()
+    page_storage()
 with tabs[8]:
-    page_research()
+    page_mlcc()
 with tabs[9]:
-    page_forward()
+    page_radar()
 with tabs[10]:
-    page_aimap()
+    page_research()
 with tabs[11]:
-    page_themes()
+    page_forward()
 with tabs[12]:
-    page_space()
+    page_aimap()
 with tabs[13]:
+    page_themes()
+with tabs[14]:
+    page_space()
+with tabs[15]:
     page_pick()
 st.caption("Alpha Desk · 墨绿金主题 build 2026.07.04c · 数据来自公开行情接口，仅供研究，非投资建议。")
