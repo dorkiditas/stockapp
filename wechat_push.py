@@ -6,94 +6,37 @@ SendKey 从环境变量 SERVERCHAN_KEY 读取(GitHub repo secret)。
 本地直接运行=只打印不发送(没设key时)。
 """
 import os
-import datetime as dt
 import requests
-import pandas as pd
 
-import tencent
-import forward
-from calls import MY_CALLS, MY_BUYS
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 HOLDINGS = os.path.join(BASE, "holdings.csv")
-CUR = {"美股": "$", "A股": "¥", "港股": "HK$"}
 
 
 def build_digest():
-    today = dt.date.today().strftime("%m-%d")
-    h = pd.read_csv(HOLDINGS, dtype={"ticker": str})
-    q = tencent.quote(h["ticker"].tolist())
-    h["symbol"] = h["ticker"].apply(tencent.to_symbol)
-    m = h.merge(q[["code", "name", "market", "price", "prev_close"]],
-                left_on="symbol", right_on="code", how="left")
-    m["市值"] = m["price"] * m["shares"]
-    m["今日盈亏"] = (m["price"] - m["prev_close"]) * m["shares"]
-    m["盈亏%"] = (m["price"] / m["cost"] - 1) * 100
+    """日报正文 = daily_brief.render() 的输出 + App 入口。
 
-    lines = [f"## 📈 选股工作台 · {today}", ""]
-
-    # 风险雷达(只报警,不替你决策)
+    ⚠️ 2026-08-15 重写。旧版这里有一整段【写死】的"最该动的":
+        「🟢 建 MU 仓」「🔴 平掉 BE 空单」「🔴 砍 QCOM」「🟡 CRDO 减一部分换 CIEN」。
+    到 8/15 这四条是三条错、一条违规:
+        · 建 MU  → **违反她 7/30 自订的 BUY_SIDE_LOCKED**(杠杆≥1.5x 不许出买方建议)
+        · 平 BE  → BE 空头 7/28 已平,仓位不存在
+        · CRDO   → 8/3 已清仓
+        · 砍 QCOM→ 8/7 CPU_RENAISSANCE 已写死【不许再对 QCOM 出减仓 call】
+    一份每天自动发出、内容却停在一个月前的日报,比不发更危险。
+    现在改成:**一个字都不写死**,全部由 daily_brief 当天重算,并带买方措辞闸门。
+    """
+    import daily_brief
+    title, md = daily_brief.render()          # 闸门在 render 里,违规会抛 AssertionError
+    lines = [md, "", "### 📱 打开工作台",
+             "- 永久网址(云端,笔记本无关):https://stockapp-99rbhabczaebwv2fkzqm9a.streamlit.app",
+             "- 家里WiFi(固定):http://10.0.66.237:8501"]
     try:
-        import risk_radar
-        risks = risk_radar.all_risks()
-        if risks:
-            lines.append("### ⚠️ 风险雷达")
-            for w in risks:
-                lines.append(f"- {w}")
-            lines.append("")
-    except Exception:
-        pass
-
-    # 持仓快照(分币种)
-    lines.append("### 💰 持仓")
-    for g in ["美股", "A股", "港股"]:
-        sub = m[m["market"] == g]
-        if len(sub) and sub["市值"].notna().any():
-            sym = CUR.get(g, "")
-            lines.append(f"- **{g}**:市值 {sym}{sub['市值'].sum():,.0f} · "
-                         f"今日 {sym}{sub['今日盈亏'].sum():+,.0f}")
-    lines.append("")
-
-    # 最该动的(🔴 平/砍 + 🟢买入头号)
-    lines.append("### 🎯 最该动的")
-    lines.append("- 🟢 **建 MU 仓**(存储,全链最佳风险收益:前瞻PE11/明年+96%/被低配)")
-    lines.append("- 🔴 **平掉 BE 空单**(逆势流血,与你GEV多头矛盾)")
-    lines.append("- 🔴 **砍 QCOM**(明年0增长)→ 腾钱;🟡 CRDO减一部分换CIEN")
-    lines.append("")
-
-    # 持仓操作快评(只列要动的:🔴/🟡)
-    lines.append("### 📌 要动的持仓")
-    act_rows = []
-    for _, r in m.iterrows():
-        act, reason = MY_CALLS.get(str(r["ticker"]).upper(), ("", ""))
-        if act and act[0] in "🔴🟡":
-            nm = r["name"] or r["ticker"]
-            pl = f"{r['盈亏%']:+.0f}%" if pd.notna(r["盈亏%"]) else ""
-            act_rows.append(f"- {act} **{nm}** {pl} — {reason.split(';')[0]}")
-    lines += act_rows[:8] or ["- (无)"]
-    lines.append("")
-
-    # 买入候选
-    lines.append("### 💡 买入候选(其他市场补缺口)")
-    for code, (act, reason) in list(MY_BUYS.items())[:5]:
-        lines.append(f"- {act} **{code}** — {reason.split(';')[0].split(',')[0]}")
-    lines.append("")
-    lines.append("> 我的判断,非保证。存储是周期股,加仓非all-in。")
-
-    # 当前可用入口(永久网址在最前;隧道由 keepalive.py 维护,变了也会单独推)
-    lines.append("")
-    lines.append("### 📱 打开工作台")
-    lines.append("- 永久网址(云端,笔记本无关):https://stockapp-99rbhabczaebwv2fkzqm9a.streamlit.app")
-    lines.append("- 家里WiFi(固定):http://10.0.66.237:8501")
-    try:
-        turl = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                 "tunnel_url.txt"), encoding="utf-8").read().strip()
+        turl = open(os.path.join(BASE, "tunnel_url.txt"), encoding="utf-8").read().strip()
         if turl:
             lines.append(f"- 本机直连(最快,需笔记本开机):{turl}")
     except Exception:
         pass
-
-    title = f"选股日报 {today} · 建MU/平BE"
     return title, "\n".join(lines)
 
 
