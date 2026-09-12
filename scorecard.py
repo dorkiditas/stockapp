@@ -16,6 +16,12 @@ Max 记分牌 —— 每一条 call 值多少钱,机械算,不靠我复述。
 ★ 记分口径(写死,免得事后挑对自己有利的算法):
   · 卖出类(减/清/砍):call 收益 = −(P_t / P_ref − 1)。价格跌了 = 我对。
   · 持有类(留/不减/不砍/不许减):call 收益 = +(P_t / P_ref − 1)。价格涨了 = 我对。
+  · 平空类(side="cover",9/12 新增):call 收益 = +(P_t / P_ref − 1)。**回补空头是买入方向,
+    价格涨了 = 喊平仓喊对了。**8/23 首版把 USO 平空记成 side="sell",百分比口径是反的
+    (USO 涨 18% 会被算成"我错"),留痕改正。shares 记正数(买回的股数)。
+  · 封账(until 字段,9/12 新增):已执行/已撤回的 call,打分窗口截止在 until 日,
+    之后的价格与这条 call 无关。8/23 版 QCOM 撤回条写了"按撤回日封账"但代码根本没实现,
+    一直在拿最新价打分——这次补上。
   · 美元影响 = 股数 ×(该方向下她因听我而多赚/少赚的钱)。正=听我赚了,负=听我亏了。
   · **risk 类(风险预算)照样打分、照样进表,但单独统计、不计入总命中率。**
     理由:它买的是"缓冲不被吃掉"这份保险,保险没赔付不等于保险买错。
@@ -53,21 +59,25 @@ RECONCILE_NOTE = (
 CALLS_LEDGER = [
     dict(code="SPCX", action="减300股", side="sell", kind="risk",
          called="2026-08-08", eff="2026-08-10", ref=134.00, shares=300,
-         status="未执行·本班续期", src="SPCX 档案 8/8 早班",
+         status="未执行·9/12复议维持(已成第一大仓62.2%净值;9/24另有~3.28亿股解禁)", src="SPCX 档案 8/8 早班",
          note="理由已换过一轮:『解禁砸盘』8/12 被我自己证伪并撤销,现仅剩仓位/杠杆理由"),
     dict(code="DXYZ", action="清250股", side="sell", kind="price",
          called="2026-08-07", eff="2026-08-07", ref=25.89, shares=250,
-         status="未执行", src="DXYZ 档案 8/7 深夜『第一顺位·立即执行』",
+         status="未执行·9/12复议维持(原$34.10限价已高于市价,改市价)", src="DXYZ 档案 8/7 深夜『第一顺位·立即执行』",
          note="与直接持有的 SPCX 完全重叠、且带溢价与锁定期"),
     dict(code="EWZ", action="清300股", side="sell", kind="price",
          called="2026-08-07", eff="2026-08-07", ref=35.34, shares=300,
-         status="未执行", src="EWZ 档案 8/7 深夜『第一顺位』", note="与 AI edge 无关的死钱"),
+         status="✅已执行(8/24 卖200@35.50 + 8/31 卖100@35.84,均高于$34.70目标——执行价记她赢)",
+         until="2026-08-31",
+         src="EWZ 档案 8/7 深夜『第一顺位』",
+         note="与 AI edge 无关的死钱。按价格口径这条 call 封账为负(下达后价格不跌反涨),照记;"
+              "『清死钱』是组合理由,择时本来就不是它的卖点"),
     dict(code="NASA", action="清143股", side="sell", kind="price",
          called="2026-08-07", eff="2026-08-07", ref=25.55, shares=143,
-         status="未执行", src="NASA 档案 8/7 深夜『第一顺位』", note="死钱三笔之一"),
+         status="未执行·9/12复议维持", src="NASA 档案 8/7 深夜『第一顺位』", note="死钱三笔之一"),
     dict(code="SIEGY", action="减77股(1/3)", side="sell", kind="risk",
          called="2026-08-07", eff="2026-08-07", ref=161.95, shares=77,
-         status="8/15 改判暂缓", src="SIEGY 档案 8/7 早班",
+         status="8/15 改判暂缓·9/12维持(三周-6.3%查无单一硬驱动=beta/汇率,不构成改判据)", src="SIEGY 档案 8/7 早班",
          note="8/15 复议:收回条件疑似在下达当日已满足(SI 数据中心订单三位数增长),待核一级源"),
     dict(code="PLTR", action="🟢不许再想减(=持有)", side="hold", kind="price",
          called="2026-08-04", eff="2026-08-04", ref=162.66, shares=81,
@@ -91,23 +101,44 @@ CALLS_LEDGER = [
     dict(code="AVGO", action="🟢留·不加", side="hold", kind="price",
          called="2026-08-15", eff="2026-08-15", ref=393.55, shares=140,
          status="在案(本班新起算)", src="AVGO 档案 8/15 补(2)"),
-    dict(code="USO", action="平空200(市价)", side="sell", kind="price",
-         called="2026-08-22", eff="2026-08-24", ref=134.50, shares=-200,
-         status="在案·周一开盘第一优先", src="兄弟会话 8/22 深研裁定,8/23 共署",
-         note="空头平仓:ref=8/21收盘;此后价格再涨=拖延成本。side=sell 仅为记账口径,实际动作是买回"),
+    dict(code="USO", action="平空200→已补63股@158.155", side="cover", kind="price",
+         called="2026-08-22", eff="2026-08-24", ref=134.50, shares=63,
+         status="✅部分执行(9/10,晚了12个交易日,realized -$2,110)", until="2026-09-10",
+         src="兄弟会话 8/22 深研裁定,8/23 共署;9/12 拆分记账",
+         note="side=cover(9/12 新口径):回补是买入方向,价格涨=call 对。8/24 市价可 ~$133.5 补掉,"
+              "拖到 9/10 每股多付约 $24.7——call 对、执行差,两笔账分开记"),
+    dict(code="USO", action="平剩余137股空头(市价)", side="cover", kind="price",
+         called="2026-08-22", eff="2026-08-24", ref=134.50, shares=137,
+         status="在案·9/12复议维持第一顺位(WTI逼近$100:美伊冲突+海湾航运遇袭+中东减供~670万桶/日)",
+         src="兄弟会话 8/22 裁定;9/12 复议",
+         note="剩余腿。9/11 收 $154.90,继续拖 = 给地缘供给冲击付保证金"),
     dict(code="AVGO", action="减100股回140(限$375)", side="sell", kind="risk",
          called="2026-08-22", eff="2026-08-24", ref=369.00, shares=100,
-         status="在案·NVDA前截止", src="兄弟会话 8/22 深研裁定,8/23 共署"),
+         status="未执行·9/12复议重申($375三周内仅8/28一日可成交;NVDA/9/2财报双双过关,理由回归纯仓位数学)",
+         src="兄弟会话 8/22 深研裁定,8/23 共署;9/12 复议"),
     dict(code="QCOM", action="减200股(限$159)", side="sell", kind="risk",
          called="2026-08-16", eff="2026-08-17", ref=165.79, shares=200,
-         status="已撤回(8/23 两班对表:『新事实』早已在案,替代方案更优)", src="兄弟会话 8/16 深研→8/23 复议撤回;本席位同日采纳",
-         note="撤回≠免记分:从下达到撤回的择时窗照算,这条按撤回日价格封账"),
+         status="已撤回(8/23 两班对表:『新事实』早已在案,替代方案更优)", until="2026-08-23",
+         src="兄弟会话 8/16 深研→8/23 复议撤回;本席位同日采纳",
+         note="撤回≠免记分:从下达到撤回的择时窗照算,按撤回日封账(until 机制 9/12 才实现,此前是空话)。"
+              "撤回后的事后验证:9/8 亚马逊多代定制推理芯片合作+25M股warrant@161.26,9/11收$181.97——"
+              "若当时按$159砍200股,到9/11少赚约$4.6k;『读完全文再裁定』那一课直接值这个数"),
     dict(code="CBRS", action="反弹>$230减60", side="sell", kind="risk",
          called="2026-08-22", eff="2026-08-24", ref=196.13, shares=60,
-         status="降级为复议选项(8/23 对表:追跌违『不砍』条款),移出在案", src="兄弟会话 8/22;8/23 合流裁决"),
+         status="降级为复议选项(8/23 对表:追跌违『不砍』条款),移出在案", until="2026-08-23",
+         src="兄弟会话 8/22;8/23 合流裁决",
+         note="条件单($230)从未触发,按移出日封账;9/11 收 $191.93,条件价至今未见"),
     dict(code="INTC", action="挂止损$84", side="sell", kind="risk",
          called="2026-08-22", eff="2026-08-24", ref=89.86, shares=149,
-         status="在案·风控单", src="兄弟会话 8/22 初档案;8/23 入册"),
+         status="在案·9/12揭发:IB实时挂单为空=止损从未真挂;现价$103回到成本,9/12建议上移$95",
+         src="兄弟会话 8/22 初档案;8/23 入册;9/12 复议",
+         note="9/8 Northland上调$120(Terafab)+SK Hynix考虑Intel Foundry做HBM4E base die——"
+              "事件论点部分兑现,但从-13%坐回原点是运气不是纪律,止损要挂在券商里不是档案里"),
+    dict(code="CRDO", action="(无call·她9/10自买150股@163.40,档案重开仅登记跟踪线)", side="hold", kind="price",
+         called="2026-09-12", eff="2026-09-12", ref=None, shares=150,
+         status="登记项:BUY_SIDE_LOCKED下不评买入;首条自家判断产生前不打分",
+         src="IB 成交明细 9/10 + calls.py 9/12 重开档案",
+         data_gap="非判断,仅登记(同时让台账完整性闸门知道 CRDO 已在册);打分从首条真实 call 起算"),
     # ── 数据不全,排除出汇总 ──
     dict(code="QCOM", action="减仓call(7/4 起长期在案,8/7 撤销)", side="sell", kind="price",
          called="2026-07-04", eff="2026-07-16", ref=None, shares=400,
@@ -183,16 +214,20 @@ def score(refresh=False):
             continue
         r["ref_used"] = ref
         r["eff_date_used"] = eff_d
+        # sell = 卖出方向(跌了我对);hold/cover = 买入·持有方向(涨了我对)
         sign = -1.0 if c["side"] == "sell" else 1.0
+        until = c.get("until")               # 封账日:已执行/已撤回的 call 不再吃之后的价格
         for label, days in HORIZONS:
             if days is None:
                 d = max(series)
             else:
                 d = (dt.date.fromisoformat(c["eff"]) + dt.timedelta(days=days)).isoformat()
-                if d > max(series):          # 窗口还没走完
-                    r[label] = None
-                    r[label + "$"] = None
-                    continue
+            if until and d > until:
+                d = until
+            if days is not None and d > max(series):     # 窗口还没走完
+                r[label] = None
+                r[label + "$"] = None
+                continue
             _, px = _px_on_or_before(series, d)
             if px is None:
                 r[label] = r[label + "$"] = None
@@ -217,6 +252,7 @@ def score(refresh=False):
         "price类(计入战绩)": agg(price_rows),
         "  └ 其中卖出类": agg([r for r in price_rows if r["side"] == "sell"]),
         "  └ 其中持有类": agg([r for r in price_rows if r["side"] == "hold"]),
+        "  └ 其中平空类": agg([r for r in price_rows if r["side"] == "cover"]),
         "risk类(单列·不计入)": agg([r for r in scored if r["kind"] == "risk"]),
         "排除项": [f"{r['code']} {r['action']}:{r['excluded']}" for r in rows if "excluded" in r],
     }
@@ -241,7 +277,9 @@ def unlogged():
     # ⚠️ 日期与动作词的先后顺序不固定:档案既写「8/7 …清掉250股」也写「清掉250股·★8/7…」。
     # 2026-08-15 首版只匹配了『日期在前』,漏掉了 DXYZ 这种写法 —— 负向测试当场抓到。
     # 所以改成:动作词与日期只要在 ±40 字内同时出现即算命中,不管谁在前。
-    DATE = re.compile(r"2026-08-\d\d|8/\d{1,2}")
+    # 9/12 再修一处静默失效:首版日期正则只认 8 月(2026-08-xx|8/x),9 月起写的任何动作
+    # 这道闸门都看不见 —— 台账落后闸门自己先落后了。扩到 8-12 月。
+    DATE = re.compile(r"2026-(?:0[89]|1[0-2])-\d\d|(?:[89]|1[0-2])/\d{1,2}")
     ACT = re.compile(r"减\s*\d+\s*股|清\s*\d+\s*股|清掉\s*\d+\s*股|清仓|减仓|砍掉|追砍")
     todo, nopx = [], []
     for code, (rating, body) in calls.MY_CALLS.items():

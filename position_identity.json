@@ -128,7 +128,8 @@
       "type": "STK",
       "listing": "NASDAQ",
       "adr_ratio": null,
-      "verified_by": "IBKR trade record company_name (已清仓归档)"
+      "verified_by": "IBKR get_account_positions contract_id 541265127 'CREDO TECHNOLOGY GROUP HOLDI'(2026-09-12 核)",
+      "NOT": "曾于 8/3 前清仓归档;她 2026-09-10 重新买入 150 股(100@163.54+50@163.09),财报 beat 后 -32% 的位置"
     },
     "PLTR": {
       "legal_entity": "Palantir Technologies Inc - Class A",
@@ -149,7 +150,7 @@
       "type": "ETF",
       "listing": "ARCA",
       "adr_ratio": null,
-      "verified_by": "观察项,非持仓;待建仓前需重新核实"
+      "verified_by": "IBKR get_account_positions contract_id 418893644 'UNITED STATES OIL FUND LP'(2026-09-12 核;空头 -137 股)"
     },
     "INTC": {
       "legal_entity": "Intel Corp",
