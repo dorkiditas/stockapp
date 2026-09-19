@@ -8,6 +8,88 @@
 
 ---
 
+## ★ 2026-09-19 更新：他复出了——**换了工具，没换判断**
+
+> **先认我的漏**：本篇 8/15 建档后**整整一个月没有更新**，而这一个月里他做了两件改变结论的事。
+> 触发本次更新的是她一句"他不是复出了吗"——**不是我的巡检发现的。这是流程失败，不是信息不可得。**
+> 另记一笔：本篇从 8/15 起**一直挂在分支上、从未并入 main**，等于台账里有、主干上没有。本次一并修。
+
+### ① 复出第一步（8/5–8/9）：不是股票，是私募
+
+- **$4 亿投入 Source Foundry**——斯坦福背景的芯片制造初创（红杉已投），目标是让芯片制造更快更便宜。
+  加上上月已投的 $1 亿，**同一家公司合计 $5 亿**。
+- 时点：**距离他被三家 PB 追保、把公开簿甩给 Citadel 只有几天。**
+- 卖掉公开股票簿之后，**他的书现在集中在私募**：**Anthropic、Fluidstack、MatX、Source Foundry**。
+- 置信度 **B+**（Bloomberg 8/5、8/6 两篇 + WSJ 转述 + TechCrunch 8/9，多源一致）。
+- ⚠️ **利益关系，必须登记而不是评论**：据报道**他的妻子是 Anthropic CEO 的幕僚长（chief of staff）**。
+  这不构成对 Anthropic 基本面的任何判断，但它是读他 Anthropic 仓位信心时的必要上下文。
+
+### ② 复出第二步（9 月第二周）：回公开市场，**但只用期权**
+
+据 CNBC 9/11（消息人士口径），Situational Awareness 已在期权市场重新活跃，标的包括：
+
+| 标的 | 与她的书的关系 |
+|---|---|
+| **AMD** | 不在她书内 |
+| **Bloom Energy (BE)** | **她做空过的那只**，也是他 Q1 的头号多头 |
+| **CoreWeave (CRWV)** | 与她的 CBRS 同属算力租赁/neocloud |
+| **SK 海力士** | **她的 EWY 韩国腿 + SKHY 候选** |
+| **SanDisk (SNDK)** | **她 7/12 已标"HF 宠儿·降半档"的那只**；7 月 −47% |
+| **Roundhill Memory ETF (DRAM)** | 存储篮子 |
+
+**★ 这张表读出来的第一件事：名单几乎没变。** 存储 + 电力 + neocloud，还是那本书。
+**他没有修正判断，他修正的是【工具】。**
+
+### ③ 本次更新真正改变结论的一句话
+
+> **他从"保证金杠杆"换成了"期权凸性"——因为买入期权的最大亏损是权利金，而权利金不会招来 PB 追保。**
+> 7/30 杀死他的不是选股，是"别人有权在他最不想卖的那天替他卖"。**期权把这个权力收了回来。**
+
+### ④ ★ translate 到她的书（本次唯一新增的行动含义）
+
+她 W28 周报"待拍板"里挂着的 **B 方案：$2.5–3 万期权凸性层（P 约 8–12%）**，至今未批。
+现在有了一个外部实证：**一个用 4 倍杠杆爆掉的人，复出时主动选的就是这个结构。**
+
+**但这条必须配一句反向的话，否则就是误读——**
+
+> **他是用期权【替代】他已经没有了的杠杆；她是在已有的 2.59x 杠杆【之上】再叠一层。**
+> **同一个工具，在他手里是降风险，在她手里是加风险。**
+> 他的账户杠杆是 0，凸性层是他全部的方向性敞口；她的账户满仓 + 2.59x，凸性层是第二层敞口。
+> **→ 本条不构成买方建议。BUY_SIDE_LOCKED 仍然有效，B 方案的正确顺序是"先降到解锁线，再谈凸性层"，不是"用凸性层代替降杠杆"。**
+
+附带一条对 8/15 第 1 条规则（拥挤度自动降半档）的补强：
+**他自己复出时买的是 DRAM ETF（篮子），不是单押 SNDK。** 被单票拥挤打过一次的人，回来时主动做了分散——这与她的降半档规则同向。
+
+### ⑤ 8/15 那三条盯守项，现在的状态
+
+| 盯守项 | 状态（2026-09-19） |
+|---|---|
+| ① Citadel 何时派发那 $130 亿 | **未见披露**。下一个可验证窗口＝ Q3 13F（约 11 月中） |
+| ② Anthropic 私募估值/流动性事件 | **未发生**；但他的私募簿已集中为 Anthropic / Fluidstack / MatX / Source Foundry |
+| ③ SNDK / MU 的 HF 持仓集中度下期读数 | **要等 Q3 13F（11 月中）**，9 月无新数据 |
+
+### ⑥ 置信度与我没核到的东西
+
+| 项 | 等级 |
+|---|---|
+| $4 亿 → Source Foundry（累计 $5 亿） | **B+**，Bloomberg/WSJ/TechCrunch 多源 |
+| 私募簿含 Anthropic / Fluidstack / MatX | **B** |
+| 9 月期权活动及标的名单 | **C+**——CNBC"消息人士"口径，**不是任何披露文件** |
+| 期权的方向（买 call？买 put？价差？）| ❌ **完全未知**。报道只说"buying options positions"，没有方向、没有到期、没有规模 |
+| 仓位规模 / 现 AUM 是否回升 | ❌ 无口径，最后可靠读数仍是 7 月底约 $100 亿 |
+| 是否募到新钱 | ❌ 无报道 |
+
+> **★ 因此第 ④ 条的"他选了凸性"是建立在 C+ 级证据上的推断。**
+> 若日后披露他买的是 **put**（即做空这些 AI 标的），本条的解读要整体翻面——**这是本次更新最脆弱的一环，先写在这里。**
+> 硬验证窗口同样是 **Q3 13F（约 11 月中）**，它会披露期权持仓的 CUSIP 与名义规模（但仍不披露多空方向）。
+
+### ⑦ 本次更新的证伪条件
+
+- **证伪"他换工具不换判断" =** Q3 13F 显示其期权腿以 put 为主，或标的与 6/30 的多头名单显著不重叠。
+- **证伪"私募化是有意的结构转向" =** 他在 Q4 重新加回保证金杠杆的股票簿（下一期 13F 总市值大幅回升且伴随杠杆报道）。
+
+---
+
 ## 〇、一句话结论
 
 **他不是被 AI 叙事证伪的，他是被【杠杆 × 拥挤度 × 对冲腿失效】三件事同时杀死的——而这三件事，她的书上一件不缺，只是小一号。**
@@ -206,6 +288,17 @@ SK 海力士 +30% / Nebius +27% / BE +32%，**发生在强制卖盘出清之后�
 
 ---
 
+### 来源（2026-09-19 更新新增）
+
+- [Leopold Aschenbrenner's Situational Awareness is active in options market, sources say — CNBC (9/11)](https://www.cnbc.com/2026/09/11/leopold-aschenbrenners-situational-awareness-is-active-in-options-market-sources-say.html)
+- [Situational Awareness buying options after collapse — Quartz (9/11)](https://qz.com/situational-awareness-options-amd-coreweave-bloom-energy-091126)
+- [Situational Awareness rebuilds AI options bets — Hedgeweek](https://www.hedgeweek.com/situational-awareness-rebuilds-ai-options-bets/)
+- [Situational Awareness Returns to Investing With $400 Million Bet — Bloomberg (8/5)](https://www.bloomberg.com/news/articles/2026-08-05/situational-awareness-returns-to-investing-with-400-million-bet)
+- [Situational Awareness Founder's $400 Million Bet Went to Sequoia-Backed Company — Bloomberg (8/6)](https://www.bloomberg.com/news/articles/2026-08-06/aschenbrenner-s-400-million-bet-went-to-sequoia-backed-company)
+- [Embattled hedge fund Situational Awareness invests $400M in chip startup Source Foundry — TechCrunch (8/9)](https://techcrunch.com/2026/08/09/embattled-hedge-fund-situational-awareness-invests-400m-in-chip-startup-source-foundry/)
+- [Aschenbrenner makes quick return after near-collapse of Situational Awareness — Yahoo Finance](https://finance.yahoo.com/markets/stocks/articles/aschenbrenner-makes-quick-return-near-143931633.html)
+- [The Situational Awareness Fund Blow-up: Collateral Damage from Investment Conviction! — Aswath Damodaran](https://aswathdamodaran.substack.com/p/the-situational-awareness-fund-blow)
+
 ### 来源
 
 - [Leopold Aschenbrenner Situational Awareness fund: $45B to fire sale — CNBC](https://www.cnbc.com/2026/07/31/leopold-aschenbrenner-situational-awareness-fund-fire-sale.html)
@@ -224,4 +317,4 @@ SK 海力士 +30% / Nebius +27% / BE +32%，**发生在强制卖盘出清之后�
 - [AI Stocks Rebound After Situational Awareness Fire Sale — FinanceFeeds](https://financefeeds.com/ai-stocks-rebound-situational-awareness-citadel/)
 - [AI hedge fund Situational Awareness may have sold its public portfolio, but it still has its Anthropic shares — TechCrunch](https://techcrunch.com/2026/07/30/ai-hedge-fund-situational-awareness-may-have-sold-its-public-portfolio-but-it-still-has-its-anthropic-shares/)
 
-*Max · Alpha Desk 副CIO · 2026-08-15*
+*Max · Alpha Desk 副CIO · 2026-08-15 建档 · 2026-09-19 更新（她提醒才更新，记我一笔）*
