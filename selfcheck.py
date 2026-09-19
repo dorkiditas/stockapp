@@ -113,7 +113,13 @@ for r in log:
     NONSTOCK = re.compile(r'宏观|产业判断|策略|量化|组合风险|自省|流程|对账')
     if NONSTOCK.search(tag):
         continue          # 策略/宏观/量化/行业类研究无单票评级,豁免
-    if HOUSE.search(body) and len(body) > 300:
+    # 2026-09-19 晚班加的精确豁免:有些材料(专家网络纪要、行业Q&A、周报转述)本身就不含
+    # 单一标的评级与目标价。这时要求"写明评级"是不可能满足的,而闸门要防的是【选择性摘录】
+    # ——明示"该份无评级/未覆盖该股"恰恰是完整披露,不是隐瞒。
+    # 所以只豁免【显式声明】的情形,措辞必须写死;含糊带过不豁免。
+    NO_RATING_DECLARED = re.compile(
+        r'无单一标的评级|全篇未给.{0,12}评级|该份无评级|未给任何评级|不含单一标的评级|无评级、无目标价')
+    if HOUSE.search(body) and len(body) > 300 and not NO_RATING_DECLARED.search(body):
         if not (RATING.search(body) and TP.search(body)):
             bad_cite += 1
             warn('R3-引用完整性', f'{tag}:引用了卖方但未同时写明评级与目标价')
