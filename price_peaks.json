@@ -1,0 +1,40 @@
+{
+ "_doc": "desk.py 追跌闸门的数据源。起因 2026-09-19:我 61 条方向性 call 打分后发现,发 call 时标的距阶段高点回撤 <10% 胜率 100%(10/10)、10-20% 胜率 40%(2/5)、>20% 胜率 5.3%(1/19)。故减仓 call 需先过回撤检查。本文件由 Max 每班用 IB get_price_history 更新;超过 10 天未更新则闸门判为数据不可用(fail-closed)。",
+ "_updated": "2026-09-19",
+ "peaks": {
+  "QCOM": {
+   "high_60d": 219.43,
+   "high_60d_date_idx": 0,
+   "asof": "2026-09-19",
+   "bars_through": "2026-09-18",
+   "source": "IBKR get_price_history ONE_DAY THREE_MONTHS, 取最后60根的最高 high"
+  },
+  "AVGO": {
+   "high_60d": 432.73,
+   "high_60d_date_idx": 31,
+   "asof": "2026-09-19",
+   "bars_through": "2026-09-18",
+   "source": "IBKR get_price_history ONE_DAY THREE_MONTHS, 取最后60根的最高 high"
+  },
+  "SPCX": {
+   "high_60d": 172.4,
+   "high_60d_date_idx": 3,
+   "asof": "2026-09-19",
+   "bars_through": "2026-09-18",
+   "source": "IBKR get_price_history ONE_DAY THREE_MONTHS, 取最后60根的最高 high"
+  },
+  "CRDO": {
+   "high_60d": 290.43,
+   "asof": "2026-09-19",
+   "bars_through": "2026-09-18",
+   "source": "IBKR get_price_history ONE_DAY THREE_MONTHS, 取最后60根的最高 high"
+  },
+  "SIEGY": {
+   "high_60d": 169.535,
+   "asof": "2026-09-19",
+   "bars_through": "2026-09-18",
+   "source": "IBKR get_price_history ONE_DAY THREE_MONTHS, 取最后60根的最高 high"
+  }
+ },
+ "_pending": "CBRS/DXYZ/INTC/NASA/USO 尚未灌入,闸门对这几只会 fail-closed(提示先更新),下班次补"
+}

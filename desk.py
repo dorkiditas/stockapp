@@ -210,6 +210,36 @@ def cmd_status():
 
 
 # ---------------------------------------------------------------- gate <ticker> <side>
+PEAKS = os.path.join(BASE, 'price_peaks.json')
+PEAK_STALE_DAYS = 10
+
+
+def drawdown_from_peak(tk, px):
+    """返回 (60日高点, 当前回撤%, 数据日期) 或 None。
+    数据由 Max 每班用 IB get_price_history 更新进 price_peaks.json。
+    宁可返回 None 让闸门喊'数据不可用',也不拿旧数据放行。"""
+    if not px:
+        return None
+    try:
+        raw = json.load(io.open(PEAKS, encoding='utf-8'))
+    except Exception:
+        return None
+    rec = raw.get('peaks', {}).get(tk)
+    if not rec:
+        return None
+    asof = rec.get('asof', '')
+    try:
+        age = (datetime.date.today() - datetime.date.fromisoformat(asof)).days
+    except Exception:
+        return None
+    if age > PEAK_STALE_DAYS:
+        return None
+    peak = float(rec['high_60d'])
+    if peak <= 0:
+        return None
+    return peak, (float(px) / peak - 1) * 100, asof
+
+
 def cmd_gate(ticker, side):
     side = side.lower()
     if side not in ('buy', 'add', 'sell', 'trim', 'short', 'cover'):
@@ -276,6 +306,38 @@ def cmd_gate(ticker, side):
             elif sh > 0:
                 info(f'这是一只【亏损仓】:成本 {cost:.2f} → 现 {px}({pnl:+.1f}%);砍坏仓战绩 3/3')
         must.append('给线不给令:止盈线 + 止损线并列,拖延成本按班重算')
+
+        # ------------------------------------------------------------------
+        # 追跌闸门(2026-09-19 晚班建)。起因:她说"你的 call 真的很不准",
+        # 我把自己 61 条带价格的方向性 call 全部拉出来用现价打分,结果是单调的:
+        #   发 call 时该股距【当时已知阶段高点】的回撤   条数   胜率
+        #        < 10%  (还在高位)                     10    100.0%
+        #        10-20%                                 5     40.0%
+        #        > 20%  (已深跌)                       19      5.3%
+        # 即:我的基本面判断不差(AVGO 在高位喊的 10 条全对),
+        # 坏的是时机——价格先跌、我后怕,怕了才喊减,等于卖在地板上。
+        # QCOM 我从 -23% 一路喊到 -37%(8/3 当天正是区间绝对底部 142.89),现价 178;
+        # SPCX 我在 -17%~-24% 区间喊了 10 次,现价 152.64。
+        # 靠"我记得别追跌"没用,我已经证明过我不记得。所以做成闸门。
+        # 例外:生存红线(st['hard'])触发时不受限——那是保命,不是择时。
+        # ------------------------------------------------------------------
+        dd = drawdown_from_peak(tk, px)
+        if dd is None:
+            warn(f'{tk} 没有可用的阶段高点数据(price_peaks.json 缺失或过期)'
+                 f' → 追跌闸门无法执行,先用 IB get_price_history 更新再出减仓 call')
+        else:
+            peak, ddpct, asof = dd
+            info(f'距阶段高点:现价 {px} vs 60日高 {peak:.2f} = {ddpct:+.1f}%(高点数据 {asof})')
+            if ddpct <= -20 and not st['hard']:
+                block(f'【追跌闸门】{tk} 已自阶段高点回撤 {ddpct:.1f}%(≥20%),'
+                      f'而我在这个区间的减仓胜率是 19 条里只对 1 条(5.3%)。'
+                      f'生存红线未触发(缓冲 ${st["buf"]:,.0f}/杠杆 {st["lev"]:.2f}),'
+                      f'所以这不是保命是择时 → 只许出【风险记录】,不许出减仓指令')
+            elif ddpct <= -10:
+                warn(f'{tk} 回撤 {ddpct:.1f}% 落在 10-20% 桶(我的历史胜率 40%)'
+                     f' → 可以出,但必须在 call 里写明这条胜率,让她知道我在这个位置的记录很一般')
+            else:
+                info(f'回撤 {ddpct:.1f}% < 10%,属于我历史胜率 100%(10/10)的区间 —— 这是我该喊的位置')
     elif side == 'cover':
         must.append('平空=降 gross,永远允许;写明回补后杠杆/缓冲变成多少')
 
