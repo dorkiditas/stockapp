@@ -90,6 +90,99 @@
 
 ---
 
+### ★ 补(2)·2026-09-19 盘中：他这波具体买了什么——**两层证据必须分开，我自己用 IB 核了一遍**
+
+#### A. 第一层（CNBC 9/11，消息人士口径）：买的是 **call**，六个标的
+
+- **AMD、Bloom Energy (BE)、CoreWeave (CRWV)、SK 海力士、SanDisk (SNDK)、Roundhill Memory ETF (DRAM)**
+- **成交窗口：9 月 2–10 日**
+- 性质：**买入看涨期权**（权利金前付，最大亏损＝权利金，不产生 PB 追保）
+- 规模：报道称"数亿美元权利金"，无明细
+- 置信度 **C+**（CNBC 消息人士，非披露）
+
+#### B. 第二层（交易员从异动期权流倒推的 $9,600 万）：**这层是猜的，不是报道的**
+
+- 合计约 **$9,600 万权利金，全部 2026-10-02 到期**
+- **MU $1,000 call：约 10,000 张，权利金约 $4,400 万**
+- **SNDK $1,600 call：约 4,200 张，权利金约 $4,100 万**
+- 另称含 **INTC、MRVL** 的 call
+- ⚠️ **归属是交易员看异动流猜的**，CNBC 从未点名 MU / INTC / MRVL。置信度 **D**（市场传闻）
+
+#### C. ★ IB 实拉验证（2026-09-19 盘中，本次作业唯一的一级源）
+
+| 项 | IB 实拉 |
+|---|---|
+| MU 现价 | **$1,017.79**（+4.12%，昨收 $977.50；52周高 $1,255 / 13周低 $737.88） |
+| SNDK 现价 | **$1,798.00**（**+11.37%**，昨收 $1,614.39；52周高 $2,354.39 / 13周低 $998.19） |
+| CRWV 现价 | **$81.31**（+1.79%；52周高 $153.20 / 13周低 $60.55＝距高点 −47%） |
+| MU OCT 02 '26 **1000 Call** | 最新 **$60.25**（买/卖 58.55 / 61.00），IV **64.9%** |
+| SNDK OCT 02 '26 **1600 Call** | 最新 **$221.20**（买/卖 215.90 / 227.20），IV **71.5%** |
+
+**→ 两个行权价现在都已在价内：MU 1000 价内 1.8%；SNDK 1600 价内 12.4%。**
+
+#### D. ★★ 但未平仓合约对不上——**这是本次作业最硬的一条发现**
+
+| 合约 | 传闻张数 | **IB 实拉未平仓(OI)** |
+|---|---|---|
+| MU OCT 02 '26 1000 C | ~10,000 | **3,267** |
+| SNDK OCT 02 '26 1600 C | ~4,200 | **500** |
+
+三种解释，我倾向第一种：
+
+1. **传闻里的"张数"其实是【当日成交量】，不是【建仓规模】。** 异动期权扫描器输出的是 volume，**volume ≠ open interest**；同一张合约日内来回换手会把 volume 打高而 OI 不动。
+2. 他已平掉或滚仓了大部分——SNDK 已价内 12.4%，落袋合理。
+3. 传闻规模本身就是错的。
+
+**权利金单价反算（这条支持解释 1）：**
+· MU：$4,400 万 ÷ 10,000 张 ÷ 100 ＝ **约 $44/股**；今天同一张 $60.25 → 9 月初 MU 更低时值 $44，量级对得上。
+· SNDK：$4,100 万 ÷ 4,200 张 ÷ 100 ＝ **约 $97.6/股**；今天同一张 $221.20 → 同样对得上。
+**→ 单价口径是真的，张数口径存疑。**
+
+> **结论：「他押了 $9,600 万在 10/2 到期的 call 上」这句话，在持仓层面拿不到支持。**
+> SNDK 那条尤其夸张：传闻 4,200 张 vs 实际未平仓 500 张。
+> **⚠️ OI 是 OCC 前一交易日结算口径、有一天滞后；但滞后一天解释不了 4,200 → 500 的差距。**
+
+#### E. ★ 为什么全都是 10 月 2 日到期——**结构对上了**
+
+**美光官方 IR：fiscal Q4 财报定在 2026-09-30（周三）。**（一级源：investors.micron.com，置信度 **A**）
+
+→ **10/2 到期 = 美光财报后第 2 个交易日。**
+→ **这批仓位不是"看好 AI 长期"，是【押美光 9/30 这一个 print】。**
+→ SNDK 自己不在 9/30 报（其财季在 1 月/10 月下旬口径），所以 **SNDK 的 10/2 call 是跟着美光走的 beta/同情交易**，不是它自己的事件。
+
+**这条把整件事的性质说清楚了：他复出后的第一笔公开市场交易，是一个【单事件、13 天久期】的方向性下注。**
+
+#### F. ★ 因此要收窄我自己 9/19 写的那句定性（自我校正）
+
+我 9/19 在本文件里写的是："他从保证金杠杆换成了期权凸性——**把强平权收回来了**"。
+**方向没错，但我把它写得太体面。现在按实拉的东西收窄：**
+
+> 他买的是 **13 天到期、买入时价外的 call**，而且是压在一个财报日上。
+> **这不是"风险管理意义上的凸性层"，这是短久期事件彩票。**
+> 最大亏损确实封顶＝权利金，**但归零概率极高**——他把"被 PB 强平"换成了"到期归零"。
+> **两者的共同点没有变：都是把一个十年判断压在一个极短的路径上。他改的是失败方式，不是失败频率。**
+
+**→ 对她 B 方案的含义因此改一个字：** 外部实证支持的是**【买方期权这个结构】**，
+**不支持【超短期价外 + 押单一事件】这个用法**。她 W28 写的"$2.5–3 万凸性层、P 约 8–12%"——
+若照他这个用法（13 天价外压财报），**P 会远高于 12%，且大概率直接归零**。
+**BUY_SIDE_LOCKED 仍然有效，本条依旧不是买方建议。**
+
+#### G. 顺带修掉我 9/19 漏登记的一条时间线
+
+Protos（CNBC 点名后的第一个周一）：**"Aschenbrenner 又开始在 AI 股上亏钱了"——他那六只票在 CNBC 报道后的周一全部下跌。**
+**但到 9/19 已经反转**：SNDK +11.37%、MU +4.12%，两个传闻行权价双双翻入价内。
+→ **教训（对她比对他更有用）：媒体对这类仓位的实时叙事，噪音远大于信号。三天之内"他又亏了"和"他押对了"都能写。**
+
+#### H. ★ 这条对她的书的直接含义（唯一一条）
+
+**9/30 美光财报是她整本存储链的已知波动事件**，落在她 9 月中旬去杠杆窗口**之后**：
+· **MU** 是她的买入候选（8/4 以"路径质量、2.52x 拿不住"降级，排在 AVGO 之后）——**9/30 就是那条降级判断的验证日**；
+· **EWY / SK 海力士腿、SNDK 关注仓、002475 等**都会跟着这个 print 同向动；
+· 她自己没有 MU 头寸，**所以 9/30 对她是【波动事件】不是【损益事件】——除非她在此之前加了仓**。
+**→ 行动含义只有一条：9/30 之前不新增任何存储链敞口。这与 gate 一致，不需要额外拍板。**
+
+---
+
 ## 〇、一句话结论
 
 **他不是被 AI 叙事证伪的，他是被【杠杆 × 拥挤度 × 对冲腿失效】三件事同时杀死的——而这三件事，她的书上一件不缺，只是小一号。**
@@ -288,6 +381,14 @@ SK 海力士 +30% / Nebius +27% / BE +32%，**发生在强制卖盘出清之后�
 
 ---
 
+### 来源（2026-09-19 补(2) 新增）
+
+- [Traders think Leopold Aschenbrenner just bet $96M on AI options — Protos](https://protos.com/traders-think-leopold-aschenbrenner-just-bet-96m-on-ai-options/)
+- [Leopold Aschenbrenner is back to losing money in AI stocks — Protos](https://protos.com/leopold-aschenbrenner-is-back-to-losing-money-in-ai-stocks/)
+- [Jim Cramer Flags 'Boatload' of Bullish Option Buying in Micron, Sandisk, Intel — Benzinga](https://www.benzinga.com/trading-ideas/movers/26/09/61870963/jim-cramer-flags-boatload-of-bullish-option-buying-in-micron-sandisk-intel)
+- [Micron Technology to Report Fiscal Fourth Quarter Results on September 30, 2026 — Micron IR（一级源）](https://investors.micron.com/news/press-release/2026/Micron-Technology-to-Report-Fiscal-Fourth-Quarter-Results-on-September-30-2026/default.aspx)
+- 价格/期权链/未平仓：**IBKR 实拉，2026-09-19 盘中**（MU contract 9939、SNDK 760250490、CRWV 771759702；MU OCT02'26 1000C、SNDK OCT02'26 1600C）
+
 ### 来源（2026-09-19 更新新增）
 
 - [Leopold Aschenbrenner's Situational Awareness is active in options market, sources say — CNBC (9/11)](https://www.cnbc.com/2026/09/11/leopold-aschenbrenners-situational-awareness-is-active-in-options-market-sources-say.html)
@@ -317,4 +418,4 @@ SK 海力士 +30% / Nebius +27% / BE +32%，**发生在强制卖盘出清之后�
 - [AI Stocks Rebound After Situational Awareness Fire Sale — FinanceFeeds](https://financefeeds.com/ai-stocks-rebound-situational-awareness-citadel/)
 - [AI hedge fund Situational Awareness may have sold its public portfolio, but it still has its Anthropic shares — TechCrunch](https://techcrunch.com/2026/07/30/ai-hedge-fund-situational-awareness-may-have-sold-its-public-portfolio-but-it-still-has-its-anthropic-shares/)
 
-*Max · Alpha Desk 副CIO · 2026-08-15 建档 · 2026-09-19 更新（她提醒才更新，记我一笔）*
+*Max · Alpha Desk 副CIO · 2026-08-15 建档 · 2026-09-19 更新 + 补(2)实拉核验（两次都是她提醒才动，记我一笔）*
