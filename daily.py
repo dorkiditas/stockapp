@@ -6,6 +6,7 @@
 """
 import os
 import csv
+import re
 
 # 状态里出现这些 = 该操作仍需执行/仍在建议中 → 进"今日待执行"
 _OPEN_HINTS = ("未执行", "建议中", "建议启动", "可启动", "启动首笔",
@@ -31,8 +32,16 @@ def _side(call, ticker):
     t = (ticker or "").upper()
     if "平空" in c or "补空" in c or (t == "BE" and ("平" in c)):
         return "补空", "🟩 平空(买回)"
-    if any(k in c for k in ("买", "建", "加仓", "启动", "建仓", "接", "首笔")):
-        return "买", "🟢 买/建"
+    # 2026-09-19 修:只看 call 的开头短语判方向。此前全文匹配"接"把"她已直接持有SPCX"
+    # 里的 DXYZ 清仓 call 判成了买——方向错=拖延成本符号反。先看卖词再看买词。
+    head = re.split(r"[·:：。;;(（,,]", c, maxsplit=1)[0]
+    SELL = ("减", "砍", "清", "平多", "止损", "卖", "了结", "撤")
+    BUY = ("买", "建", "加仓", "启动", "首笔", "接回")
+    for scope in (head, c):
+        if any(k in scope for k in SELL):
+            return "卖", "🔴 减/砍/平"
+        if any(k in scope for k in BUY):
+            return "买", "🟢 买/建"
     return "卖", "🔴 减/砍/平"
 
 

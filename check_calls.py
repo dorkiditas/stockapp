@@ -39,7 +39,16 @@ if n_src != len(calls.MY_CALLS):
 else:
     print(f'[OK] MY_CALLS 源码==载入 {n_src} 键')
 
-thin = [k for k, (r, b) in calls.MY_CALLS.items() if len(b) < 40]
+# 2026-09-19 晚班修:MY_CALLS 的值 27 个里有 23 个是裸字符串、不是 (评级, 正文) 二元组,
+# 原写法 `for k,(r,b) in ...` 在这里 ValueError 崩溃 —— 而崩溃点在身份闸门之前,
+# 意味着下面那道为 SIEGY 认错专门建的身份闸门,从建成起就一次都没真正执行过。
+# 闸门坏着 == 没有闸门,所以这里改成两种结构都吃。
+def _body(v):
+    if isinstance(v, (list, tuple)):
+        return v[1] if len(v) > 1 else (v[0] if v else '')
+    return v or ''
+
+thin = [k for k, v in calls.MY_CALLS.items() if len(_body(v)) < 40]
 if thin:
     print(f'[INFO] 正文<40字(可能覆盖不足): {", ".join(thin)}')
 
@@ -60,7 +69,12 @@ except Exception as e:
     print(f'[FAIL] 读不到 position_identity.json ({type(e).__name__}) —— 身份闸门无法执行')
 
 if reg:
-    missing = [k for k in calls.MY_CALLS if k not in reg]
+    # __XXX__ 是框架/复盘条目(__MACRO__、__CUT_CALL_POSTMORTEM__ 等),不是可交易标的,
+    # 没有法人实体可核 —— 豁免身份闸门。真实代码一个都不豁免。(2026-09-19 晚班加)
+    def _is_framework(k):
+        return k.startswith('__') and k.endswith('__')
+
+    missing = [k for k in calls.MY_CALLS if k not in reg and not _is_framework(k)]
     if missing:
         bad = True
         print('[FAIL] 以下代码没有经核实的身份记录,不许写判断: ' + ', '.join(missing))

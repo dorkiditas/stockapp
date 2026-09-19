@@ -22,3 +22,6 @@ calls_log.csv
 nav_snapshots.csv
 account_risk.json
 shift_briefs.md
+
+# 各班次自动备份,不进仓库(2026-09-19 晚班加)
+*.bak_*
